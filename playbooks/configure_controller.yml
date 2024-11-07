@@ -1,0 +1,11 @@
+---
+- name: Configure tier 0 controller
+  hosts: localhost
+  gather_facts: false
+  vars:
+  tasks:
+    - name: Install sshpass
+      ansible.builtin.package:
+        name: sshpass
+        state: present
+      become: true
