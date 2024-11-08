@@ -1,0 +1,31 @@
+---
+- name: Swap proxmox from wireless to wired
+  hosts: all
+  gather_facts: true
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    # hostname: "{{ ansible_facts['hostname'] }}"
+    # line_indent: "      "
+  tasks:
+    - name: Add required packages
+      ansible.builtin.package:
+        name: network-manager
+        state: present
+    - name: Add an Ethernet connection with static IP configuration
+      community.general.nmcli:
+        conn_name: conn_eth
+        ifname: eth0
+        type: ethernet
+        ip4: "192.168.0.12/24"
+        gw4: "192.168.0.1"
+        state: present
+      become: true
+    # - name: Disable connection
+    #   community.general.nmcli:
+    #     conn_name: wlan0
+    #     state: down
+    - name: Enable conn_eth
+      community.general.nmcli:
+        conn_name: conn_eth
+        state: up
