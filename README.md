@@ -62,6 +62,9 @@ I am reviewing the following wiki for add'l installation steps: https://pve.prox
 #### Next Steps
 Trying to figure out user access
 
+The below steps have be added to configure_proxmox_node.yml and a new role
+
+#### Old steps
 Save ssh connection on configuring workstation. Add the following to ~/.ssh/config
 Host proxmox01
 ```
@@ -72,3 +75,9 @@ Host proxmox01
 Get the key to the server
 ssh-copy-id -i ~/.ssh/id_rsa.pub gelzibar@hillhouse
 
+#### Proxmox CLI warnings
+Seeing local warnings when running pveum on hillhouse
+
+#### User creation
+Run add_proxmox_user.yml
+I need to do additional checking to make this idempotent, and then create groups with assigned roles

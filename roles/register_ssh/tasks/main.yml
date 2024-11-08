@@ -5,9 +5,9 @@
     append_newline: true
     prepend_newline: true
     block: |
-      HostName {{ hostname }}
-      User {{ register_ssh_user }}
-      IdentityFile ~/.ssh/id_ed25519
+      Host {{ hostname }}
+          User {{ register_ssh_user }}
+          IdentityFile ~/.ssh/id_ed25519
   delegate_to: localhost
 - name: Set authorized key taken from file
   ansible.posix.authorized_key:

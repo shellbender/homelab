@@ -1,0 +1,67 @@
+---
+- name: Create a proxmox admin
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    domain_name: https://hillhouse:8006
+  tasks:
+    - name: Generate ticket
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/ticket"
+        method: POST
+        validate_certs: false
+        body_format: form-urlencoded
+        body:
+          username: root@pam
+          password: "{{ hillhouse_root_password }}"
+        status_code: 200
+      register: ticket_response
+    - name: Print
+      ansible.builtin.debug:
+        var: request_results
+        verbosity: 1
+    - name: Set ticket
+      ansible.builtin.set_fact:
+        ticket: "{{ ticket_response.json.data.ticket }}"
+        prevent_token: "{{ ticket_response.json.data.CSRFPreventionToken }}"
+    - name: Print
+      ansible.builtin.debug:
+        var: ticket
+        verbosity: 1
+    - name: Pull users
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/users"
+        method: GET
+        headers:
+          Cookie: "PVEAuthCookie={{ ticket }}"
+        validate_certs: false
+        status_code: 200
+      register: users_response
+    - name: Print
+      ansible.builtin.debug:
+        var: users_response
+        verbosity: 1
+    - name: Create new user
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/users"
+        method: POST
+        headers:
+          Cookie: "PVEAuthCookie={{ ticket }}"
+          CSRFPreventionToken: "{{ prevent_token }}"
+        body_format: form-urlencoded
+        body:
+          userid: gelzibar@pam
+          email: anjo.hill@gmail.com
+          firstname: Andrew
+          lastname: Hill
+          password: "{{ hillhouse_user_password }}"
+        validate_certs: false
+        status_code: 200
+      register: create_response
+    - name: Print
+      ansible.builtin.debug:
+        var: create_response
+        verbosity: 1
+
