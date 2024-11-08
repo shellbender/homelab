@@ -6,6 +6,9 @@
     - name: disk
       prompt: "What is the target disk? Ex: /dev/sde"
       private: false
+    - name: part_num
+      prompt: What is the target partition number
+      private: false
   tasks:
     - name: Unmount a mounted volume
       ansible.posix.mount:
@@ -21,49 +24,24 @@
     - name: Print disk_info
       ansible.builtin.debug:
         var: disk_info
-    - name: Remove all partitions from disk
-      community.general.parted:
-        device: "{{ disk }}"
-        number: '{{ item.num }}'
-        state: absent
-      loop: '{{ disk_info.partitions }}'
-      # check_mode: true
-      become: true
-    - name: Create a FAT boot partition
-      community.general.parted:
-        device: "{{ disk }}"
-        number: 1
-        # name: EFI system partition
-        fs_type: fat32
-        part_end: 500MiB
-        flags:
-          - boot
-        state: present
-      # check_mode: true
-      become: true
     - name: Create mount point
       ansible.builtin.file:
         path: /mnt/sd_boot
         state: directory
         mode: '0755'
-      # check_mode: true
       become: true
     - name: Mount SD Card boot partition
       ansible.posix.mount:
         path: /mnt/sd_boot
-        src: "{{ disk }}1"
-        # src: "/dev/sdf1"
+        src: "{{ disk }}{{ part_num }}"
         fstype: vfat
-        # opts: ro,noauto
         state: ephemeral
-      # check_mode: true
       become: true
     - name: Unarchive a file that needs to be downloaded (added in 2.0)
       ansible.builtin.unarchive:
         src: https://github.com/worproject/rpi5-uefi/releases/download/v0.3/RPi5_UEFI_Release_v0.3.zip
         dest: /mnt/sd_boot
         remote_src: true
-      # check_mode: true
       become: true
     - name: Unmount a mounted volume
       ansible.posix.mount:

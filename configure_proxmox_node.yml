@@ -1,0 +1,64 @@
+---
+- name: Configure proxmox node
+  hosts: all
+  gather_facts: true
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    hostname: "{{ ansible_facts['hostname'] }}"
+    line_indent: "      "
+  tasks:
+    # - name: Copy .bashrc profile
+    #   ansible.builtin.copy:
+    #     dest: /root
+    #     src: /home/andrew/.bashrc
+    #     mode: "0644"
+    #   become: true
+    - name: Update /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "{{ hostname }}"
+        line: "{{ ansible_default_ipv4.address }}{{ line_indent }}{{ hostname }}"
+      become: true
+    - name: Register to controller's ssh
+      ansible.builtin.import_role:
+        name: register_ssh
+      vars:
+        register_ssh_user: gelzibar
+    - name: Add dependency for deb822_repository module
+      ansible.builtin.package:
+        name: python3-debian
+        state: present
+      become: true
+    - name: Add the Proxmox VE repository
+      ansible.builtin.deb822_repository:
+        name: pve
+        architectures:
+          - arm64
+        uris:
+          - https://mirrors.apqa.cn/proxmox/debian/pve
+        suites:
+          - "{{ ansible_facts['distribution_release'] }}"
+        components:
+          - port
+        signed_by: https://mirrors.apqa.cn/proxmox/debian/pveport.gpg
+      become: true
+      register: results
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+      become: true
+    - name: Install required proxmox packages
+      ansible.builtin.package:
+        name:
+          - ifupdown2
+          - proxmox-ve
+          - postfix
+          - open-iscsi
+        state: present
+      become: true
+    # - name: Update all packages to their latest version
+    #   ansible.builtin.apt:
+    #     name: "*"
+    #     state: latest

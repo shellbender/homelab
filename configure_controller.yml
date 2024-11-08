@@ -3,9 +3,12 @@
   hosts: localhost
   gather_facts: false
   vars:
+    packages:
+      - sshpass
+      - rpi-imager
   tasks:
-    - name: Install sshpass
+    - name: Install controller packages
       ansible.builtin.package:
-        name: sshpass
+        name: "{{ packages }}"
         state: present
       become: true

@@ -29,38 +29,46 @@ However, the uefi process has disabled (or doesn’t support) the lan port on th
 
 So, I’m going to return to the drawing board, and attempt a new install on the pi. I’m going to install raspberry pi os lite on the hardware, and then install proxmox afterward. I suspect this will be an easier process to install and configure with ansible.
 
+## TODO
+* Deal with cert warning when logging into proxmox webui
+
 ## Procedure
+version: 2
+
 Install Ansible
 Install python3
 Run scripts/setup_venv.sh
 
-### Install uefi5
-Following https://github.com/worproject/rpi5-uefi/blob/v0.3/README.md#getting-started
-# Flash the firmware
-Run the partition_sd_card.yml ansible playbook
-CAUTON: The proxmox iso will overwrite the entire disk (including the flashed uefi partition) during its installation.
-Instead, I have flashed the uefi to a external hard drive. This allows RPi5 to boot, but the sd card (the proxmox install target) will not be mounted
+### Flash sd card
+Download Raspberry Pi imager
+Download the Raspberry Pi OS arm64 lit image. 2024-10-22-raspios-bookworm-arm64-lite.img
+Select the image to install, and set the options as desired.
+    * Include enabling ssh
+    * Include an accout
+    * Configure wifi
 
-Boot the Device
-Confirms it reaches the bootloader menu
+### Bare metal configuration
+Boot the device and log in
+connect to wifi
+check ip and hostname.
 
-Proxmox installation
-following https://github.com/jiangcuo/Proxmox-Port?tab=readme-ov-file
-Download the iso
+Run configure-proxmox_node.yml to execute those following installation instructions: https://github.com/jiangcuo/Proxmox-Port/wiki/Install-Proxmox-VE-on-Debian-bookworm
 
-Execute the following command in your terminal, selecting the iso and a flash drive
-sudo dd bs=4M if=~/downloads/proxmox-ve_8.2-4_arm64.iso of=/dev/sdg conv=fdatasync status=progress
+I am reviewing the following wiki for add'l installation steps: https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm
 
-## Install to RPi5
-Select the flash drive from the bootmanager
+#### Requirements
+* Static IPs
 
-Once in the installer, selecte Proxmox with Kernel 6.1
-Select the sd card as the installation target.
-I also adjusted the max size down ~5 GiB. There were threads online specificing that max size had led to problems
+#### Next Steps
+Trying to figure out user access
 
-naming strategy: node01.hillhouse.local
+Save ssh connection on configuring workstation. Add the following to ~/.ssh/config
+Host proxmox01
+```
+    HostName hillhouse
+    User gelzibar
+    IdentityFile ~/.ssh/id_ed25519
+```
+Get the key to the server
+ssh-copy-id -i ~/.ssh/id_rsa.pub gelzibar@hillhouse
 
-When completed, it will fail to boot successfully
-## Overwrite the <new> ESP partition
-Shut down the RPi5, remove the sd card, and connect it to your machine.
-Run replace_boot_part.yml, target the sd card device, and the partition labeled "EFI System Partition" in YaST2 partitioner. My configuration had this set to 1.00 GiB

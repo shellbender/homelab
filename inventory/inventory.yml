@@ -1,9 +1,4 @@
 ---
 proxmox:
   hosts:
-    192.168.0.6
-  vars:
-    ansible_user: root
-    ansible_password: "AlanWake2"
-    ansible_become_user: root
-    ansible_become_password: "AlanWake2"
+    hillhouse
