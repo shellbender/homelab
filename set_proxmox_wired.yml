@@ -12,6 +12,20 @@
       ansible.builtin.package:
         name: network-manager
         state: present
+    - name: Enable interface management for Network Manager
+      ansible.builtin.lineinfile:
+        path: /etc/NetworkManager/NetworkManager.conf
+        regexp: "^managed="
+        line: "managed=true"
+      become: true
+    - name: Restart Network Manager service
+      ansible.builtin.service:
+        name: NetworkManager
+        state: restarted
+    - name: Enable conn_eth
+      community.general.nmcli:
+        conn_name: eth0
+        state: up
     - name: Add an Ethernet connection with static IP configuration
       community.general.nmcli:
         conn_name: conn_eth
