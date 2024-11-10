@@ -81,3 +81,8 @@ Seeing local warnings when running pveum on hillhouse
 #### User creation
 Run add_proxmox_user.yml
 I need to do additional checking to make this idempotent, and then create groups with assigned roles
+
+### Turn on lan port, disable wireless
+Plug in the raspberry pi to a router
+Run set_proxmox_wired.yml
+If connection problems are encountered, restart the raspberry pi

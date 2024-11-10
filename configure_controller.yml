@@ -15,9 +15,17 @@
         state: present
       become: true
 
+    # - name: Register ssh connections
+    #   ansible.builtin.import_role:
+    #     name: register_ssh
+    #   vars:
+    #     register_ssh_user: gelzibar
+    #     register_ssh_host: hillhouse
+
     - name: Register ssh connections
       ansible.builtin.import_role:
         name: register_ssh
       vars:
         register_ssh_user: gelzibar
-        register_host: hillhouse
+        register_ssh_hostname: "192.168.0.12"
+        register_ssh_nickname: hillhouse

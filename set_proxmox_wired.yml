@@ -28,6 +28,7 @@
         ip4: "192.168.0.12/24"
         gw4: "192.168.0.1"
         state: present
+        conn_reload: true
       become: true
       notify:
         - Disable wireless
@@ -50,9 +51,20 @@
         name: NetworkManager
         state: restarted
     - name: Disable wireless
-      community.general.nmcli:
-        conn_name: preconfigured
-        state: down
-      become: true
-      async: 45
-      poll: 5
+      block:
+        - name: Set connection to down
+          community.general.nmcli:
+            conn_name: preconfigured
+            state: down
+          become: true
+          async: 45
+          poll: 5
+
+        - name: Update wireless connection autoconnect
+          community.general.nmcli:
+            conn_name: preconfigured
+            ifname: wlan0
+            # type: wifi
+            autoconnect: false
+            state: present
+          become: true
