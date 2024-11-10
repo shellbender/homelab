@@ -5,8 +5,8 @@
   vars_files:
     - vars/secrets.yml
   vars:
-    # hostname: "{{ ansible_facts['hostname'] }}"
-    # line_indent: "      "
+    hostname: "{{ ansible_facts['hostname'] }}"
+    line_indent: "      "
   tasks:
     - name: Add required packages
       ansible.builtin.package:
@@ -18,14 +18,8 @@
         regexp: "^managed="
         line: "managed=true"
       become: true
-    - name: Restart Network Manager service
-      ansible.builtin.service:
-        name: NetworkManager
-        state: restarted
-    - name: Enable conn_eth
-      community.general.nmcli:
-        conn_name: eth0
-        state: up
+      notify:
+        - Restart Network Manager service
     - name: Add an Ethernet connection with static IP configuration
       community.general.nmcli:
         conn_name: conn_eth
@@ -35,11 +29,30 @@
         gw4: "192.168.0.1"
         state: present
       become: true
-    # - name: Disable connection
-    #   community.general.nmcli:
-    #     conn_name: wlan0
-    #     state: down
+      notify:
+        - Disable wireless
     - name: Enable conn_eth
       community.general.nmcli:
         conn_name: conn_eth
         state: up
+      become: true
+      notify:
+        - Disable wireless
+    - name: Update /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "{{ hostname }}"
+        line: "192.168.0.12{{ line_indent }}{{ hostname }}"
+      become: true
+  handlers:
+    - name: Restart Network Manager service
+      ansible.builtin.service:
+        name: NetworkManager
+        state: restarted
+    - name: Disable wireless
+      community.general.nmcli:
+        conn_name: preconfigured
+        state: down
+      become: true
+      async: 45
+      poll: 5
