@@ -1,0 +1,130 @@
+---
+- name: Create a proxmox admin
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    domain_name: https://192.168.0.12:8006
+    target_users:
+      - gelzibar@pam
+    group_name: "global_admin"
+  tasks:
+    - name: Generate ticket
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/ticket"
+        method: POST
+        validate_certs: false
+        body_format: form-urlencoded
+        body:
+          username: root@pam
+          password: "{{ hillhouse_root_password }}"
+        status_code: 200
+      register: ticket_response
+    - name: Print
+      ansible.builtin.debug:
+        var: request_results
+        verbosity: 1
+    - name: Set ticket
+      ansible.builtin.set_fact:
+        ticket: "{{ ticket_response.json.data.ticket }}"
+        prevent_token: "{{ ticket_response.json.data.CSRFPreventionToken }}"
+    - name: Print
+      ansible.builtin.debug:
+        var: ticket
+        verbosity: 1
+    - name: Pull groups
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/groups"
+        method: GET
+        headers:
+          Cookie: "PVEAuthCookie={{ ticket }}"
+        validate_certs: false
+        status_code: 200
+      register: groups_response
+    - name: Print
+      ansible.builtin.debug:
+        var: groups_response
+        verbosity: 1
+    - name: Print
+      ansible.builtin.debug:
+        var: groups_response.json.data | selectattr('groupid', 'defined') | map(attribute='groupid') | list
+        verbosity: 1
+    - name: Create global admin group
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/groups"
+        method: POST
+        headers:
+          Cookie: "PVEAuthCookie={{ ticket }}"
+          CSRFPreventionToken: "{{ prevent_token }}"
+        body_format: form-urlencoded
+        body:
+          groupid: "{{ group_name }}"
+          comment: Users with full privileges
+        validate_certs: false
+        status_code: 200
+      register: create_response
+      when: group_name not in groups_response.json.data | selectattr('groupid', 'defined') | map(attribute='groupid') | list
+      # loop: groups_response.data
+    - name: Print
+      ansible.builtin.debug:
+        var: create_response
+        verbosity: 1
+    - name: Get acl
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/acl"
+        method: GET
+        headers:
+          Cookie: "PVEAuthCookie={{ ticket }}"
+          CSRFPreventionToken: "{{ prevent_token }}"
+        # body_format: form-urlencoded
+        # body:
+        #   roles: Administrator
+        #   groups: global_admin
+        #   users: "{{ target_user }}"
+        validate_certs: false
+        status_code: 200
+      register: acl_response
+    - name: Print
+      ansible.builtin.debug:
+        var: acl_response
+        verbosity: 1
+    - name: Assign role to global admin group
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/acl"
+        method: PUT
+        headers:
+          Cookie: "PVEAuthCookie={{ ticket }}"
+          CSRFPreventionToken: "{{ prevent_token }}"
+        body_format: form-urlencoded
+        body:
+          path: /
+          roles: Administrator
+          groups: "{{ group_name }}"
+        validate_certs: false
+        status_code: 200
+      register: acl_response
+    - name: Print
+      ansible.builtin.debug:
+        var: acl_response
+        verbosity: 1
+    # - name: Assign users to group
+    #   ansible.builtin.include_tasks: add_proxmox_users_to_groups.yml
+    #   vars:
+    #     - username: "{{ item }}"
+    #   loop: "{{ target_users }}"
+
+    - name: Add user to group
+      ansible.builtin.uri:
+        url: "{{ domain_name }}/api2/json/access/users/{{ item }}"
+        method: PUT
+        headers:
+          Cookie: "PVEAuthCookie={{ ticket }}"
+          CSRFPreventionToken: "{{ prevent_token }}"
+        body_format: form-urlencoded
+        body:
+          groups: "{{ group_name }}"
+        validate_certs: false
+        status_code: 200
+      loop: "{{ target_users }}"
+      # register: users_response
