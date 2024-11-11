@@ -86,3 +86,6 @@ I need to do additional checking to make this idempotent, and then create groups
 Plug in the raspberry pi to a router
 Run set_proxmox_wired.yml
 If connection problems are encountered, restart the raspberry pi
+
+### Proxmox VE configuration
+Add a global admin group, a user, and assign user to group with add_proxmox_user.yml and add_proxmox_group.yml
