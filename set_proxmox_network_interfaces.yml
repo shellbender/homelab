@@ -1,0 +1,109 @@
+---
+- name: Swap proxmox from wireless to wired
+  hosts: all
+  gather_facts: true
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    hostname: "{{ ansible_facts['hostname'] }}"
+    line_indent: "      "
+  tasks:
+    - name: Create bridge
+      community.general.interfaces_file:
+        dest: /etc/network/interfaces
+        iface: vmbr0
+        option: mtu
+        value: 8000
+        backup: true
+        state: present
+      register: eth1_cfg
+    - name: Create proxmox bridgevmbr0
+      community.general.nmcli:
+        conn_name: vmbr0
+        type: bridge
+        ip4: "192.168.0.2/24"
+        gw4: "192.168.0.1"
+        dns4:
+          - "192.168.0.1"
+        state: present
+        conn_reload: true
+      become: true
+      # notify:
+      #   - Set wifi to down
+      #   - Update wireless connection autoconnect
+
+    - name: Add an Ethernet connection with static IP configuration
+      community.general.nmcli:
+        conn_name: conn_eth
+        ifname: eth0
+        type: bridge-slave
+        master: vmbr0
+        state: present
+        # ip4: "192.168.0.12/24"
+        # gw4: "192.168.0.1"
+        # dns4:
+        #   - "192.168.0.1"
+
+        # state: present
+        # conn_reload: true
+      become: true
+      # notify:
+      #   - Set wifi to down
+      #   - Update wireless connection autoconnect
+
+    - name: Enable vmbr0
+      community.general.nmcli:
+        conn_name: vmbr0
+        state: up
+      become: true
+      async: 45
+      poll: 5
+    # - name: Enable conn_eth
+    #   community.general.nmcli:
+    #     conn_name: conn_eth
+    #     state: up
+    #   become: true
+    #   notify:
+    #     - Set wifi to down
+    #     - Update wireless connection autoconnect
+
+    # - name: Add lan port to vmbr0
+    #   community.general.nmcli:
+    #     conn_name: vmbr0
+    #     type: bridge
+    #     ip4: "192.168.0.2/24"
+    #     gw4: "192.168.0.1"
+    #     dns4:
+    #       - "192.168.0.1"
+    #     state: present
+    #     conn_reload: true
+    #   become: true
+
+    - name: Update /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "{{ hostname }}"
+        line: "192.168.0.12{{ line_indent }}{{ hostname }}"
+      become: true
+  handlers:
+    - name: Restart Network Manager service
+      ansible.builtin.service:
+        name: NetworkManager
+        state: restarted
+
+    - name: Set wifi to down
+      community.general.nmcli:
+        conn_name: preconfigured
+        state: down
+      become: true
+      async: 45
+      poll: 5
+
+    - name: Update wireless connection autoconnect
+      community.general.nmcli:
+        conn_name: preconfigured
+        ifname: wlan0
+        # type: wifi
+        autoconnect: false
+        state: present
+      become: true

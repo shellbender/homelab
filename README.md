@@ -89,3 +89,11 @@ If connection problems are encountered, restart the raspberry pi
 
 ### Proxmox VE configuration
 Add a global admin group, a user, and assign user to group with add_proxmox_user.yml and add_proxmox_group.yml
+
+### Adding jellyfin lxc
+see https://tteck.github.io/Proxmox/ and https://www.reddit.com/r/Proxmox/comments/186qgqw/confused_with_the_best_way_to_run_plex_and_serve/
+
+### Container Template Test
+I'm following a YT guide and it's adding a container. One item I noticed is that it requires a bridge. A default bridge was setup on the proxmox iso, but not with a debian install.
+
+I've taken several docs and converted it to ansible nmcli. It's being detected (and working) at the console/ssh nmcli/ip link. However, it does not appear in the proxmox gui. I suspect this is because proxmox is relying on /etc/network/interfaces config file.
