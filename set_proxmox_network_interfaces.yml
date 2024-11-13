@@ -9,6 +9,7 @@
     line_indent: "      "
     vmbr0:
       name: vmbr0
+      address_family: bridge
       options:
         address: "192.168.0.2/24"
         gateway: "192.168.0.1"
@@ -17,29 +18,44 @@
         bridge-fd: "0"
         dns-nameserver: "192.168.0.1"
   tasks:
+    - name: Add required packages
+      ansible.builtin.package:
+        name: network-manager
+        state: absent
+      become: true
     - ansible.builtin.debug:
         var: item.key
       loop: "{{ lookup('dict', vmbr0.options) }}"
-    - name: Create bridge
-      community.general.interfaces_file:
-        dest: /etc/network/interfaces
-        # iface: "{{ vmbr0.name }}"
-        iface: "vmbr0"
-        value: up
-        state: present
-      register: vmbr0_create
+    - name: Create bridge interface
+      ansible.builtin.lineinfile:
+        path: /etc/network/interfaces
+        line: "iface {{ vmbr0.name }} {{ vmbr0.address_family }} static"
+        insertbefore: "source /etc/network/interfaces.d/*"
+      become: true
+    # - name: Create bridge
+    #   community.general.interfaces_file:
+    #     dest: /etc/network/interfaces
+    #     # iface: "{{ vmbr0.name }}"
+    #     iface: vmbr0
+    #     address_family: bridge
+    #     value: up
+    #     state: present
+    #   register: vmbr0_create
+    #   # become: true
     - ansible.builtin.debug:
         var: vmbr0_create
     - name: Create bridge
       community.general.interfaces_file:
         dest: /etc/network/interfaces
         iface: "{{ vmbr0.name }}"
+        # address_family: "{{ vmbr0.address_family }}"
         option: "{{ item.key }}"
         value: "{{ item.value }}"
         # backup: true
         state: present
       register: vmbr0_cfg
       loop: "{{ lookup('dict', vmbr0.options) }}"
+      become: true
     - ansible.builtin.debug:
         var: vmbr0_cfg
     # - name: Create proxmox bridgevmbr0
