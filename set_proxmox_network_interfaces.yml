@@ -7,38 +7,63 @@
   vars:
     hostname: "{{ ansible_facts['hostname'] }}"
     line_indent: "      "
+    vmbr0:
+      name: vmbr0
+      options:
+        address: "192.168.0.2/24"
+        gateway: "192.168.0.1"
+        bridge-ports: "eth0"
+        bridge-stp: "off"
+        bridge-fd: "0"
+        dns-nameserver: "192.168.0.1"
   tasks:
+    - ansible.builtin.debug:
+        var: item.key
+      loop: "{{ lookup('dict', vmbr0.options) }}"
     - name: Create bridge
       community.general.interfaces_file:
         dest: /etc/network/interfaces
-        iface: vmbr0
-        option: mtu
-        value: 8000
-        backup: true
+        # iface: "{{ vmbr0.name }}"
+        iface: "vmbr0"
+        value: up
         state: present
-      register: eth1_cfg
-    - name: Create proxmox bridgevmbr0
-      community.general.nmcli:
-        conn_name: vmbr0
-        type: bridge
-        ip4: "192.168.0.2/24"
-        gw4: "192.168.0.1"
-        dns4:
-          - "192.168.0.1"
+      register: vmbr0_create
+    - ansible.builtin.debug:
+        var: vmbr0_create
+    - name: Create bridge
+      community.general.interfaces_file:
+        dest: /etc/network/interfaces
+        iface: "{{ vmbr0.name }}"
+        option: "{{ item.key }}"
+        value: "{{ item.value }}"
+        # backup: true
         state: present
-        conn_reload: true
-      become: true
+      register: vmbr0_cfg
+      loop: "{{ lookup('dict', vmbr0.options) }}"
+    - ansible.builtin.debug:
+        var: vmbr0_cfg
+    # - name: Create proxmox bridgevmbr0
+    #   community.general.nmcli:
+    #     conn_name: vmbr0
+    #     type: bridge
+    #     ip4: "192.168.0.2/24"
+    #     gw4: "192.168.0.1"
+    #     dns4:
+    #       - "192.168.0.1"
+    #     state: present
+    #     conn_reload: true
+    #   become: true
       # notify:
       #   - Set wifi to down
       #   - Update wireless connection autoconnect
 
-    - name: Add an Ethernet connection with static IP configuration
-      community.general.nmcli:
-        conn_name: conn_eth
-        ifname: eth0
-        type: bridge-slave
-        master: vmbr0
-        state: present
+    # - name: Add an Ethernet connection with static IP configuration
+    #   community.general.nmcli:
+    #     conn_name: conn_eth
+    #     ifname: eth0
+    #     type: bridge-slave
+    #     master: vmbr0
+    #     state: present
         # ip4: "192.168.0.12/24"
         # gw4: "192.168.0.1"
         # dns4:
@@ -46,18 +71,18 @@
 
         # state: present
         # conn_reload: true
-      become: true
+      # become: true
       # notify:
       #   - Set wifi to down
       #   - Update wireless connection autoconnect
 
-    - name: Enable vmbr0
-      community.general.nmcli:
-        conn_name: vmbr0
-        state: up
-      become: true
-      async: 45
-      poll: 5
+    # - name: Enable vmbr0
+    #   community.general.nmcli:
+    #     conn_name: vmbr0
+    #     state: up
+    #   become: true
+    #   async: 45
+    #   poll: 5
     # - name: Enable conn_eth
     #   community.general.nmcli:
     #     conn_name: conn_eth
@@ -86,10 +111,10 @@
         line: "192.168.0.12{{ line_indent }}{{ hostname }}"
       become: true
   handlers:
-    - name: Restart Network Manager service
-      ansible.builtin.service:
-        name: NetworkManager
-        state: restarted
+    # - name: Restart Network Manager service
+    #   ansible.builtin.service:
+    #     name: NetworkManager
+    #     state: restarted
 
     - name: Set wifi to down
       community.general.nmcli:
