@@ -5,146 +5,44 @@
   vars_files:
     - vars/secrets.yml
   vars:
-    hostname: "{{ ansible_facts['hostname'] }}"
+    hostname: hillhouse
     line_indent: "      "
-    vmbr0:
-      name: vmbr0
-      address_family: bridge
-      options:
-        address: "192.168.0.2/24"
-        gateway: "192.168.0.1"
-        bridge-ports: "eth0"
-        bridge-stp: "off"
-        bridge-fd: "0"
-        dns-nameserver: "192.168.0.1"
+    if_name: vmbr0
+    address_family: inet
+    address_base: "192.168.0.2"
+    address: "{{ address_base }}/24"
+    gateway: "192.168.0.1"
+    bridge_ports: "eth0" # bridge-ports
+    bridge_stp: "off" # bridge-stp
+    bridge_fd: "0" # bridge-fd
+    dns_nameserver: "{{ gateway }}"
   tasks:
+    # TODO Remove the required packages after single uninstall
     - name: Add required packages
       ansible.builtin.package:
         name: network-manager
         state: absent
       become: true
-    - ansible.builtin.debug:
-        var: item.key
-      loop: "{{ lookup('dict', vmbr0.options) }}"
-    - name: Create bridge interface
-      ansible.builtin.lineinfile:
-        path: /etc/network/interfaces
-        line: "iface {{ vmbr0.name }} {{ vmbr0.address_family }} static"
-        insertbefore: "source /etc/network/interfaces.d/*"
-      become: true
-    # - name: Create bridge
-    #   community.general.interfaces_file:
-    #     dest: /etc/network/interfaces
-    #     # iface: "{{ vmbr0.name }}"
-    #     iface: vmbr0
-    #     address_family: bridge
-    #     value: up
-    #     state: present
-    #   register: vmbr0_create
-    #   # become: true
-    - ansible.builtin.debug:
-        var: vmbr0_create
-    - name: Create bridge
-      community.general.interfaces_file:
+    - name: Configure network interfaces
+      ansible.builtin.template:
+        src: templates/interfaces.j2
         dest: /etc/network/interfaces
-        iface: "{{ vmbr0.name }}"
-        # address_family: "{{ vmbr0.address_family }}"
-        option: "{{ item.key }}"
-        value: "{{ item.value }}"
-        # backup: true
-        state: present
-      register: vmbr0_cfg
-      loop: "{{ lookup('dict', vmbr0.options) }}"
+        mode: "0644"
       become: true
-    - ansible.builtin.debug:
-        var: vmbr0_cfg
-    # - name: Create proxmox bridgevmbr0
-    #   community.general.nmcli:
-    #     conn_name: vmbr0
-    #     type: bridge
-    #     ip4: "192.168.0.2/24"
-    #     gw4: "192.168.0.1"
-    #     dns4:
-    #       - "192.168.0.1"
-    #     state: present
-    #     conn_reload: true
-    #   become: true
-      # notify:
-      #   - Set wifi to down
-      #   - Update wireless connection autoconnect
-
-    # - name: Add an Ethernet connection with static IP configuration
-    #   community.general.nmcli:
-    #     conn_name: conn_eth
-    #     ifname: eth0
-    #     type: bridge-slave
-    #     master: vmbr0
-    #     state: present
-        # ip4: "192.168.0.12/24"
-        # gw4: "192.168.0.1"
-        # dns4:
-        #   - "192.168.0.1"
-
-        # state: present
-        # conn_reload: true
-      # become: true
-      # notify:
-      #   - Set wifi to down
-      #   - Update wireless connection autoconnect
-
-    # - name: Enable vmbr0
-    #   community.general.nmcli:
-    #     conn_name: vmbr0
-    #     state: up
-    #   become: true
-    #   async: 45
-    #   poll: 5
-    # - name: Enable conn_eth
-    #   community.general.nmcli:
-    #     conn_name: conn_eth
-    #     state: up
-    #   become: true
-    #   notify:
-    #     - Set wifi to down
-    #     - Update wireless connection autoconnect
-
-    # - name: Add lan port to vmbr0
-    #   community.general.nmcli:
-    #     conn_name: vmbr0
-    #     type: bridge
-    #     ip4: "192.168.0.2/24"
-    #     gw4: "192.168.0.1"
-    #     dns4:
-    #       - "192.168.0.1"
-    #     state: present
-    #     conn_reload: true
-    #   become: true
+      notify:
+        - Restart interfaces
 
     - name: Update /etc/hosts
       ansible.builtin.lineinfile:
         path: /etc/hosts
         regexp: "{{ hostname }}"
-        line: "192.168.0.12{{ line_indent }}{{ hostname }}"
+        line: "{{ address_base }}{{ line_indent }}{{ hostname }}"
       become: true
   handlers:
-    # - name: Restart Network Manager service
-    #   ansible.builtin.service:
-    #     name: NetworkManager
-    #     state: restarted
-
-    - name: Set wifi to down
-      community.general.nmcli:
-        conn_name: preconfigured
-        state: down
+    - name: Restart interfaces
+      ansible.builtin.command:
+        cmd: ifreload -a
+      changed_when: true
       become: true
       async: 45
       poll: 5
-
-    - name: Update wireless connection autoconnect
-      community.general.nmcli:
-        conn_name: preconfigured
-        ifname: wlan0
-        # type: wifi
-        autoconnect: false
-        state: present
-      become: true
