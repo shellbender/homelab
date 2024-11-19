@@ -1,7 +1,7 @@
 ---
 - name: Configure tier 0 controller
   hosts: localhost
-  gather_facts: false
+  gather_facts: true
   vars_files:
     - vars/secrets.yml
   vars:
@@ -28,4 +28,4 @@
       vars:
         register_ssh_user: gelzibar
         register_ssh_hostname: "192.168.0.2"
-        register_ssh_ickname: hillhouse
+        register_ssh_nickname: hillhouse

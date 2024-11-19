@@ -15,7 +15,7 @@
     bridge_ports: "eth0" # bridge-ports
     bridge_stp: "off" # bridge-stp
     bridge_fd: "0" # bridge-fd
-    dns_nameserver: "{{ gateway }}"
+    dns_nameserver: "8.8.8.8"
   tasks:
     # TODO Remove the required packages after single uninstall
     - name: Add required packages
