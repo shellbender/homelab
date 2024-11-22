@@ -97,3 +97,12 @@ see https://tteck.github.io/Proxmox/ and https://www.reddit.com/r/Proxmox/commen
 I'm following a YT guide and it's adding a container. One item I noticed is that it requires a bridge. A default bridge was setup on the proxmox iso, but not with a debian install.
 
 I've taken several docs and converted it to ansible nmcli. It's being detected (and working) at the console/ssh nmcli/ip link. However, it does not appear in the proxmox gui. I suspect this is because proxmox is relying on /etc/network/interfaces config file.
+
+Removing nmcli worked, and I'm templating /etc/network/interfaces. This appears to have resolved the problem.
+
+Making some containers fails. Investigating why. ... The answer was because several of the available images are for amd64 architecture. No issue when trying multiple arm64 images
+
+### Container IaC
+We're going to start with Packer > Terraform > Ansible. It seems like this is the general "starting point" recommendation.
+
+For this initial run, I'm wondering if I'll need Packer. Since it's a core item in the recommendation, I'm going to attempt to use it and then determine from there.

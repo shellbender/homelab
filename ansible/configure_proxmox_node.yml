@@ -7,6 +7,9 @@
   vars:
     hostname: "{{ ansible_facts['hostname'] }}"
     line_indent: "      "
+    packages:
+      - python3-debian # dependency for deb822_repository module
+      - vim
   tasks:
     # - name: Copy .bashrc profile
     #   ansible.builtin.copy:
@@ -25,9 +28,9 @@
         name: register_ssh
       vars:
         register_ssh_user: gelzibar
-    - name: Add dependency for deb822_repository module
+    - name: Install node packages
       ansible.builtin.package:
-        name: python3-debian
+        name: "{{ packages }}"
         state: present
       become: true
     - name: Add the Proxmox VE repository

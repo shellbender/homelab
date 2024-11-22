@@ -8,6 +8,7 @@
     packages:
       - sshpass
       - rpi-imager
+      - vim
   tasks:
     - name: Install controller packages
       ansible.builtin.package:

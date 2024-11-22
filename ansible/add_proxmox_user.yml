@@ -5,7 +5,7 @@
   vars_files:
     - vars/secrets.yml
   vars:
-    domain_name: https://hillhouse:8006
+    domain_name: https://192.168.0.2:8006
   tasks:
     - name: Generate ticket
       ansible.builtin.uri:
@@ -64,4 +64,3 @@
       ansible.builtin.debug:
         var: create_response
         verbosity: 1
-
