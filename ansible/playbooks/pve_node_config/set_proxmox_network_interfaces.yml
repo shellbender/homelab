@@ -5,7 +5,7 @@
   vars_files:
     - vars/secrets.yml
   vars:
-    hostname: hillhouse
+    hostname: <hostname>
     line_indent: "      "
     if_name: vmbr0
     address_family: inet
@@ -17,12 +17,6 @@
     bridge_fd: "0" # bridge-fd
     dns_nameserver: "8.8.8.8"
   tasks:
-    # TODO Remove the required packages after single uninstall
-    - name: Add required packages
-      ansible.builtin.package:
-        name: network-manager
-        state: absent
-      become: true
     - name: Configure network interfaces
       ansible.builtin.template:
         src: templates/interfaces.j2

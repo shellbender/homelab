@@ -1,0 +1,5 @@
+---
+# defaults file for enroll_user
+# userid needs to be configured as follows: username@pam
+enroll_user_id:
+enroll_user_group_names: []

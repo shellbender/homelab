@@ -64,19 +64,8 @@ Trying to figure out user access
 
 The below steps have be added to configure_proxmox_node.yml and a new role
 
-#### Old steps
-Save ssh connection on configuring workstation. Add the following to ~/.ssh/config
-Host proxmox01
-```
-    HostName hillhouse
-    User gelzibar
-    IdentityFile ~/.ssh/id_ed25519
-```
-Get the key to the server
-ssh-copy-id -i ~/.ssh/id_rsa.pub gelzibar@hillhouse
-
 #### Proxmox CLI warnings
-Seeing local warnings when running pveum on hillhouse
+Seeing local warnings when running pveum on pve node
 
 #### User creation
 Run add_proxmox_user.yml

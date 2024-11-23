@@ -1,4 +1,4 @@
-[root@node01 ~]# cat /etc/network/interfaces
+# cat /etc/network/interfaces
 auto lo
 iface lo inet loopback
 

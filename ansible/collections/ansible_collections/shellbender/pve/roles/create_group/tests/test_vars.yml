@@ -1,0 +1,12 @@
+---
+# Testing by calling the follow: ansible-playbook test.yml --extra-vars "@test_vars.yml" -v
+create_ticket_username: <username>
+create_ticket_password: <password>
+domain_name: <domain>
+create_group_details:
+  name: Testers
+  comment: A group made for testing
+  path: /
+  roles:
+    - PVEVMUser
+    - PVEUserAdmin

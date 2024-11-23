@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: true
   vars_files:
-    - vars/secrets.yml
+    - ../vars/secrets.yml
   vars:
     packer_url: https://releases.hashicorp.com/packer/1.11.2/packer_1.11.2_linux_amd64.zip
     target_dir: "{{ ansible_env.HOME }}/tmp"

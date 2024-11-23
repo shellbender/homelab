@@ -3,8 +3,8 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    - vars/secrets.yml
-    - vars/pve_user_data.yml
+    - ../vars/secrets.yml
+    - ../vars/pve_user_data.yml
   tasks:
     - name: Create core set of users
       ansible.builtin.include_role:
