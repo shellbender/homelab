@@ -1,0 +1,24 @@
+---
+# tasks file for create_user
+- name: Pull users
+  ansible.builtin.uri:
+    url: "{{ create_user_domain_name }}/api2/json/access/users"
+    method: GET
+    headers: "{{ auth_header }}"
+    validate_certs: false
+    status_code: 200
+  register: users_response
+- name: Set existing users
+  ansible.builtin.set_fact:
+    users: "{{ users_response.json.data | map(attribute='userid') }}"
+- name: Create new user
+  when: create_user_details.userid not in users
+  ansible.builtin.uri:
+    url: "{{ create_user_domain_name }}/api2/json/access/users"
+    method: POST
+    headers: "{{ auth_header }}"
+    body_format: form-urlencoded
+    body: "{{ create_user_details }}"
+    validate_certs: false
+    status_code: 200
+  register: create_response

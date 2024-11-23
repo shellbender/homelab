@@ -1,0 +1,11 @@
+---
+# vars file for create_group
+# inputs
+# userid needs to be configured as follows: username@pam
+create_group_name:
+create_group_comment:
+create_group_path:
+create_group_role:
+
+# internals
+create_group_domain_name: https://192.168.0.2:8006

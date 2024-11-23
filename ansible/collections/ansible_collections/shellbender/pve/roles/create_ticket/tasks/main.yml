@@ -1,0 +1,22 @@
+---
+# tasks file for create_ticket
+- name: Generate authentication ticket
+  when: ticket is not defined or
+        prevent_token is not defined
+  block:
+    - name: Generate ticket
+      ansible.builtin.uri:
+        url: "{{ create_ticket_domain_name }}/api2/json/access/ticket"
+        method: POST
+        validate_certs: false
+        body_format: form-urlencoded
+        body:
+          username: "{{ create_ticket_username }}"
+          password: "{{ create_ticket_password }}"
+        status_code: 200
+      register: ticket_response
+    - name: Set ticket
+      ansible.builtin.set_fact:
+        auth_header:
+          Cookie: "PVEAuthCookie={{ ticket_response.json.data.ticket }}"
+          CSRFPreventionToken: "{{ ticket_response.json.data.CSRFPreventionToken }}"

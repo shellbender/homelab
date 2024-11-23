@@ -1,0 +1,11 @@
+#SPDX-License-Identifier: MIT-0
+---
+- hosts: localhost
+  remote_user: root
+  roles:
+    - name: create_ticket
+    - name: create_group
+      vars:
+        create_group_details: "{{ details }}"
+
+

@@ -4,6 +4,7 @@
   gather_facts: true
   vars_files:
     - vars/secrets.yml
+    - vars/initial_user.yml
   vars:
     hostname: "{{ ansible_facts['hostname'] }}"
     line_indent: "      "
@@ -11,12 +12,6 @@
       - python3-debian # dependency for deb822_repository module
       - vim
   tasks:
-    # - name: Copy .bashrc profile
-    #   ansible.builtin.copy:
-    #     dest: /root
-    #     src: /home/andrew/.bashrc
-    #     mode: "0644"
-    #   become: true
     - name: Update /etc/hosts
       ansible.builtin.lineinfile:
         path: /etc/hosts
@@ -61,10 +56,6 @@
           - open-iscsi
         state: present
       become: true
-    # - name: Update all packages to their latest version
-    #   ansible.builtin.apt:
-    #     name: "*"
-    #     state: latest
     - name: Ensure a locale exists
       community.general.locale_gen:
         name: en_US.UTF-8
@@ -75,3 +66,16 @@
         cmd: localedef -i en_US -f UTF-8 en_US.UTF-8
       changed_when: true
       become: true
+    - name: Generate system ticket cookie
+      ansible.builtin.include_role:
+        name: shellbender.pve.create_ticket
+      vars:
+        create_ticket_username: root@pam
+        create_ticket_password: "{{ hillhouse_root_password }}"
+    - name: Register initial user
+      ansible.builtin.include_role:
+        name: shellbender.pve.create_user
+      vars:
+        create_user_details: "{{ user }}"
+    # Assign roles to group
+    # Assign group to user
