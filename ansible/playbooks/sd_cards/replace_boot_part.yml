@@ -1,0 +1,50 @@
+---
+- name: Partition the SD Card for UEFI5
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: disk
+      prompt: "What is the target disk? Ex: /dev/sde"
+      private: false
+    - name: part_num
+      prompt: What is the target partition number
+      private: false
+  tasks:
+    - name: Unmount a mounted volume
+      ansible.posix.mount:
+        path: /mnt/sd_boot
+        state: unmounted
+      become: true
+    - name: Read device information (always use unit when probing)
+      community.general.parted:
+        device: "{{ disk }}"
+        unit: MiB
+      register: disk_info
+      become: true
+    - name: Print disk_info
+      ansible.builtin.debug:
+        var: disk_info
+    - name: Create mount point
+      ansible.builtin.file:
+        path: /mnt/sd_boot
+        state: directory
+        mode: '0755'
+      become: true
+    - name: Mount SD Card boot partition
+      ansible.posix.mount:
+        path: /mnt/sd_boot
+        src: "{{ disk }}{{ part_num }}"
+        fstype: vfat
+        state: ephemeral
+      become: true
+    - name: Unarchive a file that needs to be downloaded (added in 2.0)
+      ansible.builtin.unarchive:
+        src: https://github.com/worproject/rpi5-uefi/releases/download/v0.3/RPi5_UEFI_Release_v0.3.zip
+        dest: /mnt/sd_boot
+        remote_src: true
+      become: true
+    - name: Unmount a mounted volume
+      ansible.posix.mount:
+        path: /mnt/sd_boot
+        state: unmounted
+      become: true

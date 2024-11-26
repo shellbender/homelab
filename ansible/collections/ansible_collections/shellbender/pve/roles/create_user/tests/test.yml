@@ -1,0 +1,8 @@
+---
+- name: Create proxmox users
+  hosts: localhost
+  vars_files:
+    - test_vars.yml
+  roles:
+    - name: create_ticket
+    - name: create_user

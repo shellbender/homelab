@@ -1,0 +1,5 @@
+---
+# vars file for enroll_user
+
+# internals
+create_user_domain_name: https://192.168.0.2:8006

@@ -1,0 +1,52 @@
+---
+# tasks file for create_group
+- name: Pull groups
+  ansible.builtin.uri:
+    url: "{{ domain_name }}/api2/json/access/groups"
+    method: GET
+    headers: "{{ auth_header }}"
+    validate_certs: false
+    status_code: 200
+  register: groups_response
+
+- name: Create list of group names
+  ansible.builtin.set_fact:
+    pve_groups: "{{ groups_response.json.data | map(attribute='groupid') }}"
+
+- name: Create group - {{ create_group_details.name }}
+  when: create_group_details.name not in pve_groups
+  ansible.builtin.uri:
+    url: "{{ domain_name }}/api2/json/access/groups"
+    method: POST
+    headers: "{{ auth_header }}"
+    body_format: form-urlencoded
+    body:
+      groupid: "{{ create_group_details.name }}"
+      comment: "{{ create_group_details.comment }}"
+    validate_certs: false
+    status_code: 200
+  register: create_response
+
+- name: Get acl
+  ansible.builtin.uri:
+    url: "{{ domain_name }}/api2/json/access/acl"
+    method: GET
+    headers: "{{ auth_header }}"
+    validate_certs: false
+    status_code: 200
+  register: acl_response
+
+  # the request's roles parameter can accept a list separated by a space.
+- name: Assign role to global admin group
+  ansible.builtin.uri:
+    url: "{{ domain_name }}/api2/json/access/acl"
+    method: PUT
+    headers: "{{ auth_header }}"
+    body_format: form-urlencoded
+    body:
+      path: "{{ create_group_details.path }}"
+      roles: "{{ create_group_details.roles | join(' ') }}"
+      groups: "{{ create_group_details.name }}"
+    validate_certs: false
+    status_code: 200
+  register: acl_response

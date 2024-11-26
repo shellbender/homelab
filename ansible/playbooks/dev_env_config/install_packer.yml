@@ -1,0 +1,42 @@
+---
+- name: Installs packer to the controller
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    packer_url: https://releases.hashicorp.com/packer/1.11.2/packer_1.11.2_linux_amd64.zip
+    target_dir: "{{ ansible_env.HOME }}/tmp"
+    local_bin: /usr/local/bin
+  tasks:
+    - name: Print
+      ansible.builtin.debug:
+        var: ansible_env.HOME
+
+    - name: Download zip
+      ansible.builtin.get_url:
+        url: "{{ packer_url }}"
+        dest: "{{ target_dir }}"
+        mode: "0644"
+
+    - name: Unzip
+      ansible.builtin.unarchive:
+        src: "{{ target_dir }}/{{ packer_url | split('/') | last }}"
+        dest: "{{ local_bin }}"
+        remote_src: true
+      become: true
+
+      # Make sure its idempotent otherwise PATH grows on every run.
+    - name: Add /usr/local/bin to path
+      when: ansible_env.PATH is not search(local_bin)
+      ansible.builtin.copy:
+        dest: /etc/profile.d/custom-path.sh
+        content: 'PATH=$PATH:{{ local_bin }}'
+        mode: "0644"
+
+    - name: Remove zip
+      ansible.builtin.file:
+        path: "{{ target_dir }}/{{ packer_url | split('/') | last }}"
+        state: absent
+      tags:
+        - always

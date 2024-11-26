@@ -1,0 +1,88 @@
+---
+  # TODO Disable wifi after physical interface is configured
+  # TODO set_proxmox_network_interfaces should be ran at some point
+- name: Configure proxmox node
+  hosts: all
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+    - ../vars/config_pve.yml
+  vars:
+    hostname: "{{ ansible_facts['hostname'] }}"
+    line_indent: "      "
+    packages:
+      - python3-debian # dependency for deb822_repository module
+      - vim
+  tasks:
+    - name: Update /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "{{ hostname }}"
+        line: "{{ ansible_default_ipv4.address }}{{ line_indent }}{{ hostname }}"
+      become: true
+    - name: Register to controller's ssh
+      ansible.builtin.import_role:
+        name: register_ssh
+      vars:
+        register_ssh_user: "{{ node_user_name }}"
+    - name: Install node packages
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+      become: true
+    - name: Add the Proxmox VE repository
+      ansible.builtin.deb822_repository:
+        name: pve
+        architectures:
+          - arm64
+        uris:
+          - https://mirrors.apqa.cn/proxmox/debian/pve
+        suites:
+          - "{{ ansible_facts['distribution_release'] }}"
+        components:
+          - port
+        signed_by: https://mirrors.apqa.cn/proxmox/debian/pveport.gpg
+      become: true
+      register: results
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+      become: true
+    - name: Install required proxmox packages
+      ansible.builtin.package:
+        name:
+          - ifupdown2
+          - proxmox-ve
+          - postfix
+          - open-iscsi
+        state: present
+      become: true
+    - name: Ensure a locale exists
+      community.general.locale_gen:
+        name: en_US.UTF-8
+        state: present
+      become: true
+    - name: Configure locale
+      ansible.builtin.command:
+        cmd: localedef -i en_US -f UTF-8 en_US.UTF-8
+      changed_when: true
+      become: true
+    - name: Generate system ticket cookie
+      ansible.builtin.include_role:
+        name: shellbender.pve.create_ticket
+      vars:
+        create_ticket_username: root@pam
+        create_ticket_password: "{{ node_root_password }}"
+    - name: Register initial user
+      ansible.builtin.include_role:
+        name: shellbender.pve.create_user
+      vars:
+        create_user_details: "{{ user }}"
+    - name: Register initial groups
+      ansible.builtin.include_role:
+        name: shellbender.pve.create_group
+    # Assign group to user
+    - name: Enroll linux user to pve groups
+      ansible.builtin.include_role:
+        name: shellbender.pve.enroll_user

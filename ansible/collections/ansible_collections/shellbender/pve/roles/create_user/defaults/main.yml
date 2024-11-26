@@ -1,0 +1,9 @@
+---
+# inputs
+# userid needs to be configured as follows: username@pam
+create_user_details:
+  userid:
+  email:
+  firstname:
+  lastname:
+  password:

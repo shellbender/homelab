@@ -1,0 +1,18 @@
+---
+- name: Create proxmox users
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../vars/secrets.yml
+    - ../vars/pve_user_data.yml
+  tasks:
+    - name: Create core set of users
+      ansible.builtin.include_role:
+        name: shellbender.pve.create_user
+      vars:
+        create_user_userid: "{{ item.userid }}"
+        create_user_email: "{{ item.email }}"
+        create_user_firstname: "{{ item.firstname }}"
+        create_user_lastname: "{{ item.lastname }}"
+        create_user_password: "{{ item.password }}"
+      loop: "{{ users }}"

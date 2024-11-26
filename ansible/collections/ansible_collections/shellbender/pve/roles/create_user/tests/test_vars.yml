@@ -1,0 +1,11 @@
+---
+# Testing by calling the follow: ansible-playbook test.yml --extra-vars "@test_vars.yml" -v
+create_ticket_username: <username>
+create_ticket_password: <password>
+domain_name: <domain>
+create_user_details:
+  userid: <username@pve>
+  email: <email>
+  firstname: <name>
+  lastname: <name>
+  password: <password>

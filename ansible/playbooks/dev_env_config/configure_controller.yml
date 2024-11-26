@@ -1,0 +1,25 @@
+---
+- name: Configure tier 0 controller
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    packages:
+      - sshpass
+      - rpi-imager
+      - vim
+  tasks:
+    - name: Install controller packages
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+      become: true
+
+    - name: Register ssh connections
+      ansible.builtin.import_role:
+        name: register_ssh
+      vars:
+        register_ssh_user: "{{ node_user_name }}"
+        register_ssh_hostname: "{{ host_ip }}"
+        register_ssh_nickname: "{{ hostname }}"

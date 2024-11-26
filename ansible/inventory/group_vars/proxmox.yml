@@ -1,0 +1,3 @@
+---
+ansible_user: "{{ node_user_name }}"
+ansible_password: "{{ node_user_password }}"

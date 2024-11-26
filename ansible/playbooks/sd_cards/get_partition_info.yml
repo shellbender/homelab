@@ -1,0 +1,23 @@
+---
+- name: Partition the SD Card for UEFI5
+  hosts: localhost
+  gather_facts: false
+  vars_prompt:
+    - name: disk
+      prompt: "What is the target disk? Ex: /dev/sde"
+      private: false
+  tasks:
+    - name: Unmount a mounted volume
+      ansible.posix.mount:
+        path: /mnt/sd_boot
+        state: unmounted
+      become: true
+    - name: Read device information (always use unit when probing)
+      community.general.parted:
+        device: "{{ disk }}"
+        unit: MiB
+      register: disk_info
+      become: true
+    - name: Print disk_info
+      ansible.builtin.debug:
+        var: disk_info

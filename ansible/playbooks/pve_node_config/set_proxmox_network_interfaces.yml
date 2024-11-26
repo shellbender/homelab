@@ -1,0 +1,42 @@
+---
+- name: Swap proxmox from wireless to wired
+  hosts: all
+  gather_facts: true
+  vars_files:
+    - vars/secrets.yml
+  vars:
+    hostname: <hostname>
+    line_indent: "      "
+    if_name: vmbr0
+    address_family: inet
+    address_base: "192.168.0.2"
+    address: "{{ address_base }}/24"
+    gateway: "192.168.0.1"
+    bridge_ports: "eth0" # bridge-ports
+    bridge_stp: "off" # bridge-stp
+    bridge_fd: "0" # bridge-fd
+    dns_nameserver: "8.8.8.8"
+  tasks:
+    - name: Configure network interfaces
+      ansible.builtin.template:
+        src: templates/interfaces.j2
+        dest: /etc/network/interfaces
+        mode: "0644"
+      become: true
+      notify:
+        - Restart interfaces
+
+    - name: Update /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "{{ hostname }}"
+        line: "{{ address_base }}{{ line_indent }}{{ hostname }}"
+      become: true
+  handlers:
+    - name: Restart interfaces
+      ansible.builtin.command:
+        cmd: ifreload -a
+      changed_when: true
+      become: true
+      async: 45
+      poll: 5
