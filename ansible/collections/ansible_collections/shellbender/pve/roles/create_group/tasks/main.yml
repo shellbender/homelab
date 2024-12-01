@@ -2,7 +2,7 @@
 # tasks file for create_group
 - name: Pull groups
   ansible.builtin.uri:
-    url: "{{ domain_name }}/api2/json/access/groups"
+    url: "{{ create_group_domain_name }}/api2/json/access/groups"
     method: GET
     headers: "{{ auth_header }}"
     validate_certs: false
@@ -16,7 +16,7 @@
 - name: Create group - {{ create_group_details.name }}
   when: create_group_details.name not in pve_groups
   ansible.builtin.uri:
-    url: "{{ domain_name }}/api2/json/access/groups"
+    url: "{{ create_group_domain_name }}/api2/json/access/groups"
     method: POST
     headers: "{{ auth_header }}"
     body_format: form-urlencoded
@@ -29,7 +29,7 @@
 
 - name: Get acl
   ansible.builtin.uri:
-    url: "{{ domain_name }}/api2/json/access/acl"
+    url: "{{ create_group_domain_name }}/api2/json/access/acl"
     method: GET
     headers: "{{ auth_header }}"
     validate_certs: false
@@ -39,7 +39,7 @@
   # the request's roles parameter can accept a list separated by a space.
 - name: Assign role to global admin group
   ansible.builtin.uri:
-    url: "{{ domain_name }}/api2/json/access/acl"
+    url: "{{ create_group_domain_name }}/api2/json/access/acl"
     method: PUT
     headers: "{{ auth_header }}"
     body_format: form-urlencoded

@@ -95,3 +95,6 @@ Making some containers fails. Investigating why. ... The answer was because seve
 We're going to start with Packer > Terraform > Ansible. It seems like this is the general "starting point" recommendation.
 
 For this initial run, I'm wondering if I'll need Packer. Since it's a core item in the recommendation, I'm going to attempt to use it and then determine from there.
+
+### Packer
+Use create_token role to generate an api key to plug into credentials.pkr.hcl

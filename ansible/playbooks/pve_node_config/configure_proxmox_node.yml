@@ -7,6 +7,7 @@
   vars_files:
     - ../vars/secrets.yml
     - ../vars/config_pve.yml
+    - ../vars/pve_user_data.yml
   vars:
     hostname: "{{ ansible_facts['hostname'] }}"
     line_indent: "      "
@@ -49,6 +50,8 @@
         upgrade: dist
         update_cache: true
       become: true
+      tags:
+        - dist-upgrade
     - name: Install required proxmox packages
       ansible.builtin.package:
         name:
@@ -78,11 +81,29 @@
       ansible.builtin.include_role:
         name: shellbender.pve.create_user
       vars:
-        create_user_details: "{{ user }}"
+        create_user_details: "{{ initial_user }}"
+    - name: Register additional users
+      ansible.builtin.include_role:
+        name: shellbender.pve.create_user
+      loop: "{{ pve_users }}"
+      loop_control:
+        loop_var: create_user_details
     - name: Register initial groups
       ansible.builtin.include_role:
         name: shellbender.pve.create_group
+      loop: "{{ pve_groups }}"
+      loop_control:
+        loop_var: create_group_details
     # Assign group to user
     - name: Enroll linux user to pve groups
       ansible.builtin.include_role:
         name: shellbender.pve.enroll_user
+      loop: "{{ pve_enrollments }}"
+      loop_control:
+        loop_var: enroll_user_details
+    - name: Download VM isos
+      ansible.builtin.include_role:
+        name: shellbender.pve.download_iso
+      loop: "{{ iso_urls }}"
+      loop_control:
+        loop_var: iso_url

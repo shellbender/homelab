@@ -1,11 +1,11 @@
 ---
 - name: Add user to groups
   ansible.builtin.uri:
-    url: "{{ enroll_user_domain_name }}/api2/json/access/users/{{ enroll_user_id }}"
+    url: "{{ enroll_user_domain_name }}/api2/json/access/users/{{ enroll_user_details.id }}"
     method: PUT
     headers: "{{ auth_header }}"
     body_format: form-urlencoded
     body:
-      groups: "{{ enroll_user_group_names }}"
+      groups: "{{ enroll_user_details.group_names }}"
     validate_certs: false
     status_code: 200

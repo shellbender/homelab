@@ -1,0 +1,12 @@
+---
+# tasks file for download_iso
+# provide the target_url when calling the role
+- name: Print
+  ansible.builtin.debug:
+    var: iso_url
+- name: Download VM iso
+  ansible.builtin.get_url:
+    url: "{{ iso_url }}"
+    dest: /var/lib/vz/template/iso
+    mode: '0644'
+  become: true

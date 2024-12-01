@@ -1,3 +1,4 @@
-#SPDX-License-Identifier: MIT-0
 ---
 # vars file for create_token
+# internals
+create_token_domain_name: https://192.168.0.2:8006
