@@ -1,0 +1,16 @@
+---
+- name: Configure proxmox node
+  hosts: all
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    iso_urls:
+      - "https://cdimage.ubuntu.com/releases/24.10/release/ubuntu-24.10-live-server-arm64.iso"
+  tasks:
+    - name: Download VM isos
+      ansible.builtin.include_role:
+        name: shellbender.pve.download_iso
+      loop: "{{ iso_urls }}"
+      loop_control:
+        loop_var: iso_url

@@ -14,6 +14,7 @@
     packages:
       - python3-debian # dependency for deb822_repository module
       - vim
+      - lm-sensors
   tasks:
     - name: Update /etc/hosts
       ansible.builtin.lineinfile:

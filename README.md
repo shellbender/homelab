@@ -98,3 +98,17 @@ For this initial run, I'm wondering if I'll need Packer. Since it's a core item 
 
 ### Packer
 Use create_token role to generate an api key to plug into credentials.pkr.hcl
+
+#### Packer generate iso
+Create a credentials file and a packer file. Then run `packer init ./[template]` and `packer validate -var-file "../credentials.pkr.hcl" ./template`
+
+When ready, run packer build -var-file "../credentials.pkr.hcl" ./proxmox-ubuntu.pkr.hcl
+Currently, hanging on 'Waiting for SSH to become available...'
+
+### SPECIAL NOTICE
+* You may see the following error on the proxmox node when logged in as a non-root user.
+> ipcc_send_rec[1] failed: Unknown error -1
+> ipcc_send_rec[2] failed: Unknown error -1
+> ipcc_send_rec[3] failed: Unknown error -1
+> Unable to load access control list: Unknown error -1
+* The cli is intended for use with the root user.
