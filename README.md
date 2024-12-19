@@ -105,6 +105,17 @@ Create a credentials file and a packer file. Then run `packer init ./[template]`
 When ready, run packer build -var-file "../credentials.pkr.hcl" ./proxmox-ubuntu.pkr.hcl
 Currently, hanging on 'Waiting for SSH to become available...'
 
+The http server Packer creates was unaccessible by pve.
+From the development machine I added a firewall port, then wget the target from pve.
+firewall-cmd --list-all
+sudo firewall-cmd --zone home --add-port=8802/tcp --permanent
+sudo firewall-cmd --reload
+firewall-cmd --set-default-zone=home
+sudo firewall-cmd --list-all
+
+In addition to opening up the port, I had to update the target BIOS to OVMF (UEFI), and configure the cloud-init with a hashed password.
+
+
 ### SPECIAL NOTICE
 * You may see the following error on the proxmox node when logged in as a non-root user.
 > ipcc_send_rec[1] failed: Unknown error -1

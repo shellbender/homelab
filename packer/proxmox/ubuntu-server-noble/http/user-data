@@ -1,18 +1,12 @@
 #cloud-config
 autoinstall:
   version: 1
-  identity:
-    username: <username>
-    password: <password>
-  locale: en_US
-  keyboard:
-    layout: en
   ssh:
     install-server: true
     allow-pw: true
-    # disable_root: true
-    # ssh_quiet_keygen: true
-    # allow_public_ssh_keys: true
+    disable_root: true
+    ssh_quiet_keygen: true
+    allow_public_ssh_keys: true
   packages:
     - qemu-guest-agent
     - sudo
@@ -23,14 +17,14 @@ autoinstall:
       size: 0
   user-data:
     package_upgrade: false
-    timezone: Europe/Berlin
     users:
-      - name: <username>
+      # - default
+      - name: packer
         groups: [adm, sudo]
         lock-passwd: false
         sudo: ALL=(ALL) NOPASSWD:ALL
         shell: /bin/bash
-        passwd: <password>
-        # - or -
+        # hashed password of: packer
+        passwd: $6$rounds=4096$EYyudc4PqQ5yewL1$UDwTxJ4o5Zo6.35j0f7RynIOWiRRsUAdC9ceq82zmzK4AmYWx/BfOdHw8aHaFgawGMPENfHya4nsPHzsJ/gjI0
         # ssh_authorized_keys:
-        #   - "~/.ssh/id_ed25519_shellbender_underhill"
+        #   - your-ssh-key
