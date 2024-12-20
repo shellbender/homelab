@@ -42,7 +42,7 @@ variable "proxmox_ssh_pass" {
     type = string
 }
 
-source "proxmox-iso" "ubuntu-server-noble" {
+source "proxmox-iso" "rhel-plow-aarch64" {
   # Proxmox Connection Settings
   proxmox_url = "${var.proxmox_api_url}"
   username = "${var.proxmox_api_token_id}"
@@ -53,7 +53,7 @@ source "proxmox-iso" "ubuntu-server-noble" {
   node = "${var.proxmox_node}"
   vm_id = "${var.proxmox_vm_id}"
   vm_name = "${var.proxmox_vm_name}"
-  template_description = "Ubuntu Server Image"
+  template_description = "RHEL Server Image"
 
   # raspberry pi did not boot with SeaBIOS, use OVMF instead
   bios = "ovmf"
@@ -68,8 +68,8 @@ source "proxmox-iso" "ubuntu-server-noble" {
   # VM OS Settings
   boot_iso {
     type = "scsi"
-    iso_file = "local:iso/ubuntu-24.10-live-server-arm64.iso"
-    iso_checksum = "8762f7e74e4d64d72fceb5f70682e6b069932deedb4949c6975d0f0fe0a91be3"
+    iso_file = "local:iso/rhel-9.5-aarch64-boot.iso"
+    iso_checksum = "3a7c383ed5ef6b377624ebdd206f554812e2412a1581a22fcfb8fc922aa55816"
     iso_storage_pool = "local"
     unmount = true
   }
@@ -108,14 +108,7 @@ source "proxmox-iso" "ubuntu-server-noble" {
   cloud_init_storage_pool = "local"
 
   # PACKER Boot Commands
-  boot_command = [
-      "<esc><wait>",
-      "e<wait>",
-      "<down><down><down><end>",
-      "<bs><bs><bs><bs><wait>",
-      "autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
-      "<f10><wait>"
-  ]
+  boot_command = ["<esc><wait>", "vmlinuz initrd=initrd.img ", "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg", "<enter>"]
 
   boot                    = "c"
   boot_wait               = "10s"
@@ -138,8 +131,8 @@ source "proxmox-iso" "ubuntu-server-noble" {
 # Build Definition to create the VM Template
 build {
 
-    name = "ubuntu-server-noble-iso"
-    sources = ["source.proxmox-iso.ubuntu-server-noble"]
+    name = "rhel-plow-aarch64-iso"
+    sources = ["source.proxmox-iso.rhel-plow-aarch64"]
 
     # Provisioning the VM Template for Cloud-Init Integration in Proxmox #1
     provisioner "shell" {

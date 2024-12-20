@@ -115,6 +115,20 @@ sudo firewall-cmd --list-all
 
 In addition to opening up the port, I had to update the target BIOS to OVMF (UEFI), and configure the cloud-init with a hashed password.
 
+### Cloud-Init VM
+Cloned vms fails to boot with error: ()
+Use of uninitialized value in split at /usr/share/perl5/PVE/QemuServer/Cloudinit.pm line 105.
+generating cloud-init ISO
+kvm: -device ide-cd,bus=ide.1,unit=0,drive=drive-ide2,id=ide2: Bus 'ide.1' not found
+TASK ERROR: start failed: QEMU exited with code 1
+
+> This is an easy fix IDE drivers are not avaivable on the pi so delete your ide-cdrom and readd it as scsi-cd, then it should start up. Hope I could help.
+
+To change this behavior, update the packer file:
+cloud_init_disk_type = "scsi"
+
+### Packer generate OCI image
+Reading through packer's LXC Builder docs, the requirements are a modern kernel and lxc package. Seems like a good opportunity to set up a builder vm to achieve this.
 
 ### SPECIAL NOTICE
 * You may see the following error on the proxmox node when logged in as a non-root user.
