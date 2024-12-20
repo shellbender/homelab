@@ -46,3 +46,10 @@
         state: absent
       tags:
         - always
+
+    - name: Open ports for packer's http file server
+      ansible.posix.firewalld:
+        port: 8002/tcp
+        permanent: true
+        state: enabled
+      become: true

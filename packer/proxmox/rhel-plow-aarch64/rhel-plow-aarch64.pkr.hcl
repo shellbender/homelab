@@ -58,12 +58,12 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   # raspberry pi did not boot with SeaBIOS, use OVMF instead
   bios = "ovmf"
 
-  efi_config {
-      efi_storage_pool = "local"
-      pre_enrolled_keys = true
-      efi_format = "raw"
-      efi_type  = "4m"
-  }
+//   efi_config {
+//       efi_storage_pool = "local"
+//       pre_enrolled_keys = true
+//       efi_format = "raw"
+//       efi_type  = "4m"
+//   }
 
   # VM OS Settings
   boot_iso {
@@ -108,7 +108,9 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   cloud_init_storage_pool = "local"
 
   # PACKER Boot Commands
-  boot_command = ["<esc><wait>", "vmlinuz initrd=initrd.img ", "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg", "<enter>"]
+//   boot_command = ["<esc><wait>", "e<wait>", "<down><down><down><down><end>", "vmlinuz initrd=initrd.img ", "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg", "<enter>", "<f10><wait>"]
+//   boot_command = ["<esc><wait>", "e<wait>", "<down><down><down><down><end>", "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg", "<enter>", "<f10><wait>"]
+  boot_command = ["<esc><wait>", "e<wait>", "<tab> inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort}}/ks.cfg", "<enter><wait>", "<f10><wait>"]
 
   boot                    = "c"
   boot_wait               = "10s"

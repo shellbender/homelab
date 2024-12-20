@@ -112,6 +112,7 @@ sudo firewall-cmd --zone home --add-port=8802/tcp --permanent
 sudo firewall-cmd --reload
 firewall-cmd --set-default-zone=home
 sudo firewall-cmd --list-all
+(I have added this to the install_packer playbook)
 
 In addition to opening up the port, I had to update the target BIOS to OVMF (UEFI), and configure the cloud-init with a hashed password.
 
