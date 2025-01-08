@@ -42,7 +42,7 @@ variable "proxmox_ssh_pass" {
     type = string
 }
 
-source "proxmox-iso" "rhel-plow-aarch64" {
+source "proxmox-iso" "rocky-blue-onyx-aarch64" {
   # Proxmox Connection Settings
   proxmox_url = "${var.proxmox_api_url}"
   username = "${var.proxmox_api_token_id}"
@@ -53,7 +53,7 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   node = "${var.proxmox_node}"
   vm_id = "${var.proxmox_vm_id}"
   vm_name = "${var.proxmox_vm_name}"
-  template_description = "RHEL Server Image"
+  template_description = "Rocky Server Image"
 
   # raspberry pi did not boot with SeaBIOS, use OVMF instead
   bios = "ovmf"
@@ -61,8 +61,8 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   # VM OS Settings
   boot_iso {
     type = "scsi"
-    iso_file = "local:iso/rhel-9.5-aarch64-boot.iso"
-    iso_checksum = "3a7c383ed5ef6b377624ebdd206f554812e2412a1581a22fcfb8fc922aa55816"
+    iso_file = "local:iso/Rocky-9.5-aarch64-minimal.iso"
+    iso_checksum = "sha256:bd7a6bd90ae54c9f9e4c2e8c957b33fb61fbffcede251fe73f0b0beb42fd9ca"
     iso_storage_pool = "local"
     unmount = true
   }
@@ -101,7 +101,7 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   cloud_init_storage_pool = "local"
 
   # PACKER Boot Commands
-  boot_command = ["<esc><wait>", "<up>e<wait>", "<down><down><end><wait>", "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg", "<f10>"]
+  boot_command = ["<esc><wait>", "<up>e<wait>", "<down><down><end><wait>", "text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg", "<f10>"]
 
   boot                    = "c"
   boot_wait               = "10s"
@@ -124,8 +124,8 @@ source "proxmox-iso" "rhel-plow-aarch64" {
 # Build Definition to create the VM Template
 build {
 
-    name = "rhel-plow-aarch64-iso"
-    sources = ["source.proxmox-iso.rhel-plow-aarch64"]
+    name = "rocky-blue-onyx-aarch64-iso"
+    sources = ["source.proxmox-iso.rocky-blue-onyx-aarch64"]
 
     # Provisioning the VM Template for Cloud-Init Integration in Proxmox #1
     provisioner "shell" {

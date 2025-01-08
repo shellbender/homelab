@@ -6,8 +6,7 @@
     - ../vars/secrets.yml
   vars:
     iso_urls:
-      - "https://cdimage.ubuntu.com/releases/24.10/release/ubuntu-24.10-live-server-arm64.iso"
-      # Need a RHEL image, but direct download gets bonked. Manually uploading for now
+      - https://cdimage.ubuntu.com/releases/24.10/release/ubuntu-24.10-live-server-arm64.iso
   tasks:
     - name: Download VM isos
       ansible.builtin.include_role:
