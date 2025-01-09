@@ -7,6 +7,9 @@
   vars:
     iso_urls:
       - https://cdimage.ubuntu.com/releases/24.10/release/ubuntu-24.10-live-server-arm64.iso
+      - https://cdimage.debian.org/cdimage/release/current/arm64/iso-dvd/debian-12.8.0-arm64-DVD-1.iso
+      - https://cdimage.debian.org/cdimage/release/current/arm64/iso-cd/debian-12.8.0-arm64-netinst.iso
+      # Need a RHEL image, but direct download gets bonked. Manually uploading for now
   tasks:
     - name: Download VM isos
       ansible.builtin.include_role:
