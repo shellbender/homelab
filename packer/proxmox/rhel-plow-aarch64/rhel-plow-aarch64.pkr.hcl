@@ -61,8 +61,7 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   # VM OS Settings
   boot_iso {
     type = "scsi"
-    iso_file = "local:iso/rhel-9.5-aarch64-boot.iso"
-    iso_checksum = "3a7c383ed5ef6b377624ebdd206f554812e2412a1581a22fcfb8fc922aa55816"
+    iso_file = "local:iso/rhel-9.5-aarch64-dvd.iso"
     iso_storage_pool = "local"
     unmount = true
   }
@@ -101,7 +100,14 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   cloud_init_storage_pool = "local"
 
   # PACKER Boot Commands
-  boot_command = ["<esc><wait>", "<up>e<wait>", "<down><down><end><wait>", "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg", "<f10>"]
+  boot_command = [
+    "<esc><wait>",
+    "<up>e<wait>",
+    "<down><down><end><bs><bs><wait>",
+    "ip=dhcp ",
+    "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<wait>",
+    "<f10>"
+  ]
 
   boot                    = "c"
   boot_wait               = "10s"
@@ -113,8 +119,7 @@ source "proxmox-iso" "rhel-plow-aarch64" {
   http_port_max           = 8802
 
   ssh_username = "${var.proxmox_ssh_user}"
-
-  ssh_password = "${var.proxmox_ssh_pass}"
+  ssh_private_key_file    = "~/.ssh/id_ed25519_packer"
 
   # Raise the timeout, when installation takes longer
   ssh_timeout             = "30m"
@@ -127,30 +132,29 @@ build {
     name = "rhel-plow-aarch64-iso"
     sources = ["source.proxmox-iso.rhel-plow-aarch64"]
 
-    # Provisioning the VM Template for Cloud-Init Integration in Proxmox #1
+    # Post-Install clean up
     provisioner "shell" {
+        execute_command = "echo '${var.proxmox_ssh_pass}' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
         inline = [
-            "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done",
+            "while [ ! -f /run/cloud-init/result.json ]; do echo 'Waiting for cloud-init...'; sleep 1; done",
             "sudo rm /etc/ssh/ssh_host_*",
             "sudo truncate -s 0 /etc/machine-id",
-            "sudo apt -y autoremove --purge",
-            "sudo apt -y clean",
-            "sudo apt -y autoclean",
+            "sudo yum -y autoremove",
+            "sudo yum -y clean all",
             "sudo cloud-init clean",
-            "sudo rm -f /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg",
-            "sudo rm -f /etc/netplan/00-installer-config.yaml",
             "sudo sync"
         ]
     }
 
-    # Provisioning the VM Template for Cloud-Init Integration in Proxmox #2
+    # Copy files to temp
     provisioner "file" {
         source = "files/99-pve.cfg"
         destination = "/tmp/99-pve.cfg"
     }
 
-    # Provisioning the VM Template for Cloud-Init Integration in Proxmox #3
+    # Copy temp files to system destinations
     provisioner "shell" {
+        execute_command = "echo '${var.proxmox_ssh_pass}' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
         inline = [ "sudo cp /tmp/99-pve.cfg /etc/cloud/cloud.cfg.d/99-pve.cfg" ]
     }
 }
