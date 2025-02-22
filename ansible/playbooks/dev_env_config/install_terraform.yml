@@ -1,0 +1,48 @@
+---
+- name: Installs terraform to the controller
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    terraform_url: https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+    target_dir: "{{ ansible_env.HOME }}/tmp"
+    local_bin: /usr/local/bin
+  tasks:
+    - name: Print
+      ansible.builtin.debug:
+        var: ansible_env.HOME
+
+    - name: Create tmp dir
+      ansible.builtin.file:
+        path: "{{ target_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download zip
+      ansible.builtin.get_url:
+        url: "{{ terraform_url }}"
+        dest: "{{ target_dir }}"
+        mode: "0755"
+
+    - name: Unzip
+      ansible.builtin.unarchive:
+        src: "{{ target_dir }}/{{ terraform_url | split('/') | last }}"
+        dest: "{{ local_bin }}"
+        remote_src: true
+      become: true
+
+      # Make sure its idempotent otherwise PATH grows on every run.
+    - name: Add /usr/local/bin to path
+      when: ansible_env.PATH is not search(local_bin)
+      ansible.builtin.copy:
+        dest: /etc/profile.d/custom-path.sh
+        content: 'PATH=$PATH:{{ local_bin }}'
+        mode: "0644"
+
+    - name: Remove zip
+      ansible.builtin.file:
+        path: "{{ target_dir }}/{{ terraform_url | split('/') | last }}"
+        state: absent
+      tags:
+        - always
