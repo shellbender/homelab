@@ -66,6 +66,10 @@ source "proxmox-iso" "rhel-plow-aarch64" {
     unmount = true
   }
 
+  efi_config {
+    efi_storage_pool = "local"
+  }
+
   # VM System Settings
   qemu_agent = true
 
