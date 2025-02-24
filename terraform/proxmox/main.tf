@@ -26,9 +26,10 @@ provider "proxmox" {
 }
 
 resource "proxmox_virtual_environment_vm" "rhel_clone" {
-  name = "rhel-clone"
+  name = "lxc-builder"
   node_name = "hillhouse"
   vm_id = 100
+  tags = ["rhel", "terraform"]
 
   clone {
     vm_id = 161
@@ -36,10 +37,14 @@ resource "proxmox_virtual_environment_vm" "rhel_clone" {
 
   bios = "ovmf"
 
-  efi_disk {
+  initialization {
     datastore_id = "local"
-    file_format = "raw"
-    type = "4m"
+    user_account {
+        username = "<username>"
+        password = "<password>"
+        keys = [
+            trimspace("ssh-ed25519 AAAAC3N...")
+        ]
+    }
   }
-
 }

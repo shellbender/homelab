@@ -49,7 +49,9 @@
 
     - name: Open ports for packer's http file server
       ansible.posix.firewalld:
-        port: 8002/tcp
+        port: 8802/tcp
         permanent: true
         state: enabled
+        immediate: true
       become: true
+      tags: firewall
