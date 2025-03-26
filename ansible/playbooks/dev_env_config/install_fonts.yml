@@ -1,0 +1,23 @@
+---
+- name: Install fonts into environments
+  hosts: localhost
+  gather_facts: false
+  vars:
+    fonts:
+      - https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/CommitMono.zip
+      - https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/FiraMono.zip
+    packages:
+      - sshpass
+      - rpi-imager
+      - vim
+  tasks:
+    - name: Unarchive font zip
+      ansible.builtin.unarchive:
+        src: "{{ item }}"
+        dest: "{{ ansible_env.HOME }}/.local/share/fonts"
+        remote_src: true
+      loop: "{{ fonts }}"
+    - name: Refresh font cache
+      ansible.builtin.command:
+        cmd: fc-cache -vf
+      changed_when: true

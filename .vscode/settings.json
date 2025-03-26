@@ -1,4 +1,5 @@
 {
-    "ansible.python.interpreterPath": "/home/andrew/repos/homelab/ansible/.venv/bin/python3",
-    "python.terminal.activateEnvironment": true
+    "python.terminal.activateEnvironment": true,
+    "ansible.ansible.path": "/home/andrew/repos/homelab/.venv/bin/ansible",
+    "editor.lineNumbers": "relative"
 }

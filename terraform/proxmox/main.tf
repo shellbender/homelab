@@ -5,17 +5,32 @@ terraform {
         source = "bpg/proxmox"
         version = "0.71.0"
     }
+    vault = {
+      source = "hashicorp/vault"
+      version = "4.6.0"
+    }
   }
 }
 
+provider "vault" {
+  # Configuration options
+}
+
+data "vault_kv_secret_v2" "pve_creds" {
+  name = "pve_creds"
+  mount = "secret"
+}
+
+data "vault_kv_secret_v2" "cloud_init_creds" {
+  name = "cloud_init_creds"
+  mount = "secret"
+}
+
 provider "proxmox" {
-  endpoint = "https://192.168.0.2:8006/"
+  endpoint = var.pve_address
 
-
-  # TODO: use terraform variable or remove the line, and use PROXMOX_VE_USERNAME environment variable
-  username = "<username>"
-  # TODO: use terraform variable or remove the line, and use PROXMOX_VE_PASSWORD environment variable
-  password = "<password>"
+  username = data.vault_kv_secret_v2.pve_creds.data.username
+  password = data.vault_kv_secret_v2.pve_creds.data.password
 
   # because self-signed TLS certificate is in use
   insecure = true
@@ -26,13 +41,14 @@ provider "proxmox" {
 }
 
 resource "proxmox_virtual_environment_vm" "rhel_clone" {
-  name = "lxc-builder"
+  name = var.guest_name
   node_name = "hillhouse"
-  vm_id = 100
+  vm_id = var.guest_id
   tags = ["rhel", "terraform"]
 
+
   clone {
-    vm_id = 161
+    vm_id = var.clone_id
   }
 
   bios = "ovmf"
@@ -40,11 +56,11 @@ resource "proxmox_virtual_environment_vm" "rhel_clone" {
   initialization {
     datastore_id = "local"
     user_account {
-        username = "<username>"
-        password = "<password>"
-        keys = [
-            trimspace("ssh-ed25519 AAAAC3N...")
-        ]
+      username = data.vault_kv_secret_v2.cloud_init_creds.data.username
+      password = data.vault_kv_secret_v2.cloud_init_creds.data.password
+      keys = [
+          trimspace(data.vault_kv_secret_v2.cloud_init_creds.data.private_key)
+      ]
     }
   }
 }

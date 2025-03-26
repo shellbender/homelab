@@ -6,3 +6,12 @@ Use settings.json
     "python.terminal.activateEnvironment": true
 ```
 If running from cli, the terminal will need to be restarted, the venv manually activated, or an ansible file will need to be open in order to function.
+
+Primary Side Bar Visibility
+{
+  "key": "ctrl+alt+b",
+  "command": "workbench.action.toggleSidebarVisibility"
+}
+
+# Vim Line Numbers
+"editor.lineNumbers": "relative"

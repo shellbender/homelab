@@ -1,0 +1,49 @@
+---
+# Run this from cli with -K or --ask-become-pass
+- name: Installs vault to the controller
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    archive_url: https://releases.hashicorp.com/vault/1.19.0/vault_1.19.0_linux_amd64.zip
+    target_dir: "{{ ansible_env.HOME }}/tmp"
+    local_bin: /usr/local/bin
+  tasks:
+    - name: Print
+      ansible.builtin.debug:
+        var: ansible_env.HOME
+
+    - name: Create tmp dir
+      ansible.builtin.file:
+        path: "{{ target_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download zip
+      ansible.builtin.get_url:
+        url: "{{ archive_url }}"
+        dest: "{{ target_dir }}"
+        mode: "0755"
+
+    - name: Unzip
+      ansible.builtin.unarchive:
+        src: "{{ target_dir }}/{{ archive_url | split('/') | last }}"
+        dest: "{{ local_bin }}"
+        remote_src: true
+      become: true
+
+      # Make sure its idempotent otherwise PATH grows on every run.
+    - name: Add /usr/local/bin to path
+      when: ansible_env.PATH is not search(local_bin)
+      ansible.builtin.copy:
+        dest: /etc/profile.d/custom-path.sh
+        content: 'PATH=$PATH:{{ local_bin }}'
+        mode: "0644"
+
+    - name: Remove zip
+      ansible.builtin.file:
+        path: "{{ target_dir }}/{{ archive_url | split('/') | last }}"
+        state: absent
+      tags:
+        - always

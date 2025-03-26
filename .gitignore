@@ -5,3 +5,4 @@ vaultpass
 *copy*
 terraform/proxmox/.terraform/*
 terraform/proxmox/*.tfstate*
+.ansible/
