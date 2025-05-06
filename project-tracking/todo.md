@@ -1,4 +1,6 @@
 * setup a selfrunner with github
+* TODO - Can't take a snapshot. 'The current guest configuration does not support taking new snapshots'
+* TODO - Automate the jellyfin post-install wizard
 
 * NAS setup.
     * Physically connect the devices
@@ -18,25 +20,10 @@
     * Passthrough to device
 
 * Jellyfin
-    <!-- * Download from https://repo.jellyfin.org/files/server/linux/latest-stable/arm64-musl/jellyfin_10.10.6-arm64-musl.tar.gz -->
-    * need wget, need htop
-    * Through package manager
-        * Add EPEL
-            * sudo subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms && sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-            * sudo dnf install --nogpgcheck https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
-            * sudo /usr/bin/crb enable
-            sudo dnf install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm - E %rhel).noarch.rpm
-            * sudo dnf install jellyfin
-            * sudo systemctl enable --now jellyfin
-            * sudo firewall-cmd --permanent --add-port 8096/tcp
-            * sudo firewall-cmd --permanent --add-port 8920/tcp
-            * sudo firewall-cmd --permanent --add-port 1900/udp
-            * sudo firewall-cmd --permanent --add-port 7359/udp
-            * sudo firewall-cmd --reload
-            * Access through http://<ip-address>:8096
-                * https will fail without a correct certificate
-            * Go through web setup
-                user: jellyfin
-                password: 
-            * Add a folder
-            * The jellyfin service account needs access to this folder (group add seems fine)
+    * Access through http://<ip-address>:8096
+        * https will fail without a correct certificate
+    * Go through web setup
+        user: jellyfin
+        password: 
+    * Add a folder
+    * The jellyfin service account needs access to this folder (group add seems fine)
