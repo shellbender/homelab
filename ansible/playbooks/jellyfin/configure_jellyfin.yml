@@ -1,0 +1,86 @@
+---
+- name: Configure jellyfin vm
+  hosts: jellyfin
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    jellyfin_version: "10.10.6"
+    packages:
+      - vim
+      - wget
+      - htop
+      - jellyfin
+    ports:
+      - 8096/tcp
+      - 8920/tcp
+      - 1900/udp
+      - 7369/udp
+    subdirectories:
+      - data
+      - cache
+      - config
+      - logs
+    repositories:
+      - name: epel
+        description: EPEL YUM repo
+        url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        gpgcheck: false
+  tasks:
+    - name: Update subscription-manager
+      ansible.builtin.command:
+        cmd: "subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms" 
+      become: true
+        
+    - name: Add repository
+      ansible.builtin.yum_repository:
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        baseurl: "{{ item.url }}"
+        gpgcheck: "{{ item.gpgcheck }}"
+      loop: "{{ repositories }}"
+      become: true
+
+    - name: update dnf cache
+      ansible.builtin.dnf:
+        update_cache: yes
+
+    - name: Install controller packages
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+      become: true
+    
+    - name: Create a symbolic link
+      ansible.builtin.file:
+        src: "/opt/jellyfin_{{ jellyfin_version }}"
+        dest: /opt/jellyfin
+        owner: root
+        group: root
+        state: link
+      tags: dev
+    
+    - name: Make subdirectories
+      ansible.builtin.file:
+        path: "/opt/jellyfin_{{ jellyfin_version }}/{{ item }}"
+        state: directory
+        mode: '0755'
+      become: true
+      tags: dev
+      loop: "{{ subdirectories }}"
+    
+    - name: Start jellyfin service
+      ansible.builtin.systemd_service:
+        name: jellyfin
+        state: started
+        enabled: true
+    
+    # Needs firewalld, and python-firewall
+    - name: Configure firewall
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        state: enabled
+        permanent: true
+        immediate: true
+      loop: "{{ ports }}"
+        

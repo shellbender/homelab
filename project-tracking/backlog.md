@@ -15,3 +15,4 @@
 # Git
 * When cloning or using gh cli, default remote to ssh rather than https
 * ssh-agent keeps losing any key adds
+* VS Code git integration fails to connect to remote
