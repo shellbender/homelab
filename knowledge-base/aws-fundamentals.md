@@ -1,0 +1,1 @@
+Sign into the aws management console with the admin account in LastPass

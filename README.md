@@ -95,3 +95,46 @@ Making some containers fails. Investigating why. ... The answer was because seve
 We're going to start with Packer > Terraform > Ansible. It seems like this is the general "starting point" recommendation.
 
 For this initial run, I'm wondering if I'll need Packer. Since it's a core item in the recommendation, I'm going to attempt to use it and then determine from there.
+
+### Packer
+Use create_token role to generate an api key to plug into credentials.pkr.hcl
+
+#### Packer generate iso
+Create a credentials file and a packer file. Then run `packer init ./[template]` and `packer validate -var-file "../credentials.pkr.hcl" ./template`
+
+When ready, run packer build -var-file "../credentials.pkr.hcl" ./proxmox-ubuntu.pkr.hcl
+Currently, hanging on 'Waiting for SSH to become available...'
+
+The http server Packer creates was unaccessible by pve.
+From the development machine I added a firewall port, then wget the target from pve.
+firewall-cmd --list-all
+sudo firewall-cmd --zone home --add-port=8802/tcp --permanent
+sudo firewall-cmd --reload
+firewall-cmd --set-default-zone=home
+sudo firewall-cmd --list-all
+(I have added this to the install_packer playbook)
+
+In addition to opening up the port, I had to update the target BIOS to OVMF (UEFI), and configure the cloud-init with a hashed password.
+
+### Cloud-Init VM
+Cloned vms fails to boot with error: ()
+Use of uninitialized value in split at /usr/share/perl5/PVE/QemuServer/Cloudinit.pm line 105.
+generating cloud-init ISO
+kvm: -device ide-cd,bus=ide.1,unit=0,drive=drive-ide2,id=ide2: Bus 'ide.1' not found
+TASK ERROR: start failed: QEMU exited with code 1
+
+> This is an easy fix IDE drivers are not avaivable on the pi so delete your ide-cdrom and readd it as scsi-cd, then it should start up. Hope I could help.
+
+To change this behavior, update the packer file:
+cloud_init_disk_type = "scsi"
+
+### Packer generate OCI image
+Reading through packer's LXC Builder docs, the requirements are a modern kernel and lxc package. Seems like a good opportunity to set up a builder vm to achieve this.
+
+### SPECIAL NOTICE
+* You may see the following error on the proxmox node when logged in as a non-root user.
+> ipcc_send_rec[1] failed: Unknown error -1
+> ipcc_send_rec[2] failed: Unknown error -1
+> ipcc_send_rec[3] failed: Unknown error -1
+> Unable to load access control list: Unknown error -1
+* The cli is intended for use with the root user.

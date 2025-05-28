@@ -1,0 +1,67 @@
+---
+- name: Configure jellyfin vm
+  hosts: jellyfin
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    packages:
+      - vim
+      - wget
+      - htop
+      - jellyfin
+    ports:
+      - 8096/tcp
+      - 8920/tcp
+      - 1900/udp
+      - 7369/udp
+    repositories:
+      - url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        disable_gpg_check: true
+      # The free repo MUST be enabled before the nonfree
+      - url: https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
+        disable_gpg_check: true
+      - url: https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-9.noarch.rpm
+        disable_gpg_check: true
+  tasks:
+
+    - name: Update subscription-manager
+      ansible.builtin.command:
+        cmd: "subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms" 
+      become: true
+    
+    - name: Add repository
+      ansible.builtin.dnf:
+        name: "{{ item.url }}"
+        state: present
+        disable_gpg_check: "{{ item.disable_gpg_check }}"
+      loop: "{{ repositories }}"
+      become: true
+
+    - name: update dnf cache
+      ansible.builtin.dnf:
+        update_cache: yes
+
+    - name: Install controller packages
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+      become: true
+    
+    - name: Start jellyfin service
+      ansible.builtin.systemd_service:
+        name: jellyfin
+        state: started
+        enabled: true
+      become: true
+    
+    # Needs firewalld, and python-firewall
+    - name: Configure firewall
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        state: enabled
+        permanent: true
+        immediate: true
+      loop: "{{ ports }}"
+      become: true
+        

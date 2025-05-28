@@ -1,3 +1,8 @@
 .venv/
+local/
 vaultpass
 *tmp*
+*copy*
+terraform/proxmox/.terraform/*
+terraform/proxmox/*.tfstate*
+.ansible/

@@ -1,3 +1,16 @@
-#SPDX-License-Identifier: MIT-0
 ---
 # tasks file for create_token
+- name: Generate api token
+  ansible.builtin.uri:
+    url: "{{ create_token_domain_name }}/api2/json/access/users/{{ create_token_details.userid }}/token/{{ create_token_details.tokenid }}"
+    method: POST
+    validate_certs: false
+    headers: "{{ auth_header }}"
+    body_format: form-urlencoded
+    body:
+      privsep: "{{ create_token_details.privsep }}"
+    status_code: 200
+  register: response
+- name: Print token
+  ansible.builtin.debug:
+    var: response

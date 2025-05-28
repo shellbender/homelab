@@ -1,11 +1,11 @@
 ---
-- name: Installs packer to the controller
+- name: Installs terraform to the controller
   hosts: localhost
   gather_facts: true
   vars_files:
     - ../vars/secrets.yml
   vars:
-    packer_url: https://releases.hashicorp.com/packer/1.11.2/packer_1.11.2_linux_amd64.zip
+    terraform_url: https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
     target_dir: "{{ ansible_env.HOME }}/tmp"
     local_bin: /usr/local/bin
   tasks:
@@ -21,13 +21,13 @@
 
     - name: Download zip
       ansible.builtin.get_url:
-        url: "{{ packer_url }}"
+        url: "{{ terraform_url }}"
         dest: "{{ target_dir }}"
         mode: "0755"
 
     - name: Unzip
       ansible.builtin.unarchive:
-        src: "{{ target_dir }}/{{ packer_url | split('/') | last }}"
+        src: "{{ target_dir }}/{{ terraform_url | split('/') | last }}"
         dest: "{{ local_bin }}"
         remote_src: true
       become: true
@@ -42,16 +42,7 @@
 
     - name: Remove zip
       ansible.builtin.file:
-        path: "{{ target_dir }}/{{ packer_url | split('/') | last }}"
+        path: "{{ target_dir }}/{{ terraform_url | split('/') | last }}"
         state: absent
       tags:
         - always
-
-    - name: Open ports for packer's http file server
-      ansible.posix.firewalld:
-        port: 8802/tcp
-        permanent: true
-        state: enabled
-        immediate: true
-      become: true
-      tags: firewall

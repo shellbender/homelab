@@ -1,11 +1,12 @@
 ---
-- name: Installs packer to the controller
+# Run this from cli with -K or --ask-become-pass
+- name: Installs vault to the controller
   hosts: localhost
   gather_facts: true
   vars_files:
     - ../vars/secrets.yml
   vars:
-    packer_url: https://releases.hashicorp.com/packer/1.11.2/packer_1.11.2_linux_amd64.zip
+    archive_url: https://releases.hashicorp.com/vault/1.19.0/vault_1.19.0_linux_amd64.zip
     target_dir: "{{ ansible_env.HOME }}/tmp"
     local_bin: /usr/local/bin
   tasks:
@@ -21,13 +22,13 @@
 
     - name: Download zip
       ansible.builtin.get_url:
-        url: "{{ packer_url }}"
+        url: "{{ archive_url }}"
         dest: "{{ target_dir }}"
         mode: "0755"
 
     - name: Unzip
       ansible.builtin.unarchive:
-        src: "{{ target_dir }}/{{ packer_url | split('/') | last }}"
+        src: "{{ target_dir }}/{{ archive_url | split('/') | last }}"
         dest: "{{ local_bin }}"
         remote_src: true
       become: true
@@ -42,16 +43,7 @@
 
     - name: Remove zip
       ansible.builtin.file:
-        path: "{{ target_dir }}/{{ packer_url | split('/') | last }}"
+        path: "{{ target_dir }}/{{ archive_url | split('/') | last }}"
         state: absent
       tags:
         - always
-
-    - name: Open ports for packer's http file server
-      ansible.posix.firewalld:
-        port: 8802/tcp
-        permanent: true
-        state: enabled
-        immediate: true
-      become: true
-      tags: firewall

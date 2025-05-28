@@ -1,0 +1,5 @@
+{
+    "python.terminal.activateEnvironment": true,
+    "ansible.ansible.path": "/home/andrew/repos/homelab/.venv/bin/ansible",
+    "editor.lineNumbers": "relative"
+}
