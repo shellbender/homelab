@@ -1,4 +1,4 @@
 ---
 # vars file for create_token
 # internals
-create_token_domain_name: https://192.168.0.2:8006
+create_token_domain_name: https://192.168.1.2:8006

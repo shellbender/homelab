@@ -1,6 +1,6 @@
 ---
 - name: Swap proxmox from wireless to wired
-  hosts: all
+  hosts: proxmox
   gather_facts: true
   vars_files:
     - vars/secrets.yml
@@ -9,17 +9,17 @@
     line_indent: "      "
     if_name: vmbr0
     address_family: inet
-    address_base: "192.168.0.2"
+    address_base: "192.168.1.2"
     address: "{{ address_base }}/24"
-    gateway: "192.168.0.1"
+    gateway: "192.168.1.1"
     bridge_ports: "eth0" # bridge-ports
     bridge_stp: "off" # bridge-stp
     bridge_fd: "0" # bridge-fd
-    dns_nameserver: "8.8.8.8"
+    dns_nameserver: "9.9.9.9"
   tasks:
     - name: Configure network interfaces
       ansible.builtin.template:
-        src: templates/interfaces.j2
+        src: ../../templates/interfaces.j2
         dest: /etc/network/interfaces
         mode: "0644"
       become: true
