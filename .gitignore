@@ -3,6 +3,7 @@ local/
 vaultpass
 *tmp*
 *copy*
-terraform/proxmox/.terraform/*
-terraform/proxmox/*.tfstate*
+*.terraform/
+*.tfstate*
 .ansible/
+*.terraform.lock.hcl*

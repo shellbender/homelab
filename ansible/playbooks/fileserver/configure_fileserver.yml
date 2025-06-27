@@ -1,0 +1,101 @@
+---
+# Additionals
+# sudo mkdir /srv/samba
+# sudo mkdir /srv/samba/public
+# sudo mkdir /srv/samba/protected
+# sudo smbpasswd -a shellbender (will prompt for password)
+# (not needed in ansible) testparm to perform a check
+# sudo groupadd --system smbgroup
+# sudo useradd --system --no-create-home --group smbgroup -s /bin/false smbuser
+# sudo chown -R smbuser:smbgroup /srv
+# sudo chmod -R ug=rwx,o=rx /srv
+- name: Configure fileserver vm
+  hosts: fileserver 
+  gather_facts: true
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    packages:
+      - vim
+      - wget
+      - htop
+      - samba
+    # ports:
+    #   - 8096/tcp
+    #   - 8920/tcp
+    #   - 1900/udp
+    #   - 7369/udp
+    repositories:
+      - url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        disable_gpg_check: true
+      # The free repo MUST be enabled before the nonfree
+      - url: https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
+        disable_gpg_check: true
+      - url: https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-9.noarch.rpm
+        disable_gpg_check: true
+  tasks:
+    - name: Update subscription-manager
+      ansible.builtin.command:
+        cmd: "subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms" 
+      become: true
+    
+    - name: Add repository
+      ansible.builtin.dnf:
+        name: "{{ item.url }}"
+        state: present
+        disable_gpg_check: "{{ item.disable_gpg_check }}"
+      loop: "{{ repositories }}"
+      become: true
+
+    - name: update dnf cache
+      ansible.builtin.dnf:
+        update_cache: yes
+
+    - name: Install additional packages
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+      become: true
+
+    - name: Configure samba
+      ansible.builtin.template:
+        src: ../../templates/smb.conf.j2
+        dest: /etc/samba/smb.conf
+        mode: "0644"
+      become: true
+      # notify:
+      #   - Restart interfaces
+      
+    - name: Make share directory
+      ansible.builtin.file:
+        path: /home/shellbender/share
+        mode: "0644"
+        state: directory
+
+    # Open ports:
+    # firewall-cmd --permanent --add-service=samba
+    # firewall-cmd --reload
+    
+    # Needs firewalld, and python-firewall
+    - name: Configure firewall
+      ansible.posix.firewalld:
+        service: samba
+        state: enabled
+        permanent: true
+        immediate: true
+      become: true
+
+    - name: Start and enable daemon
+      ansible.builtin.service:
+        name: smb
+        state: restarted
+        enabled: true
+      become: true
+
+  # handlers:
+  #   - name: Restart daemon
+  #     ansible.builtin.service:
+  #       name: smb
+  #       state: restarted
+  #     # changed_when: true
+  #     become: true

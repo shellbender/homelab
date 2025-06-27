@@ -1,3 +1,6 @@
+Need to associate the 2T disk to a mount on fileserver
+
+# OLD
 * setup a selfrunner with github
 * TODO - Can't take a snapshot. 'The current guest configuration does not support taking new snapshots'
 * TODO - Automate the jellyfin post-install wizard
