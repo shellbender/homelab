@@ -1,16 +1,6 @@
 ---
-# Additionals
-# sudo mkdir /srv/samba
-# sudo mkdir /srv/samba/public
-# sudo mkdir /srv/samba/protected
-# sudo smbpasswd -a shellbender (will prompt for password)
-# (not needed in ansible) testparm to perform a check
-# sudo groupadd --system smbgroup
-# sudo useradd --system --no-create-home --group smbgroup -s /bin/false smbuser
-# sudo chown -R smbuser:smbgroup /srv
-# sudo chmod -R ug=rwx,o=rx /srv
 - name: Configure fileserver vm
-  hosts: fileserver 
+  hosts: fileserver
   gather_facts: true
   vars_files:
     - ../vars/secrets.yml
@@ -20,11 +10,6 @@
       - wget
       - htop
       - samba
-    # ports:
-    #   - 8096/tcp
-    #   - 8920/tcp
-    #   - 1900/udp
-    #   - 7369/udp
     repositories:
       - url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
         disable_gpg_check: true
@@ -36,9 +21,9 @@
   tasks:
     - name: Update subscription-manager
       ansible.builtin.command:
-        cmd: "subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms" 
+        cmd: "subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms"
       become: true
-    
+
     - name: Add repository
       ansible.builtin.dnf:
         name: "{{ item.url }}"
@@ -63,19 +48,63 @@
         dest: /etc/samba/smb.conf
         mode: "0644"
       become: true
-      # notify:
-      #   - Restart interfaces
-      
-    - name: Make share directory
-      ansible.builtin.file:
-        path: /home/shellbender/share
-        mode: "0644"
-        state: directory
 
-    # Open ports:
-    # firewall-cmd --permanent --add-service=samba
-    # firewall-cmd --reload
-    
+    - name: Add smbgroup
+      ansible.builtin.group:
+        name: smbgroup
+        state: present
+        system: true
+      become: true
+
+    - name: Add smbuser
+      ansible.builtin.user:
+        name: smbuser
+        comment: Samba user
+        group: smbgroup
+        create_home: false
+        system: true
+        shell: /bin/false
+      become: true
+
+    - name: Create a new ext4 primary partition
+      community.general.parted:
+        device: /dev/vdb
+        number: 1
+        state: present
+        fs_type: ext4
+        label: gpt
+      become: true
+      tags:
+        - mount
+
+    - name: Create filesystem on new partition
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/vdb1
+      become: true
+
+    - name: Mount partition
+      ansible.posix.mount:
+        path: /srv
+        src: /dev/vdb1
+        state: mounted
+        fstype: ext4
+      become: true
+      tags:
+        - mount
+
+    - name: Make share directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: smbuser
+        group: smbgroup
+        mode: "0775"
+        state: directory
+      become: true
+      loop:
+        - /srv/samba/public
+        - /srv/samba/protected
+
     # Needs firewalld, and python-firewall
     - name: Configure firewall
       ansible.posix.firewalld:
@@ -91,11 +120,9 @@
         state: restarted
         enabled: true
       become: true
-
-  # handlers:
-  #   - name: Restart daemon
-  #     ansible.builtin.service:
-  #       name: smb
-  #       state: restarted
-  #     # changed_when: true
-  #     become: true
+      
+    - name: Set samba account
+      ansible.builtin.shell:
+        cmd: "(echo '{{ smb_password }}'; echo '{{ smb_password }}') | sudo smbpasswd -a {{ smb_username }} -s"
+      become: true
+      no_log: true

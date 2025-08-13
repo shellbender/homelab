@@ -75,7 +75,7 @@ resource "proxmox_virtual_environment_vm" "rhel_clone" {
   
   disk {
     datastore_id = "local-zfs"
-    interface = "virtio"
+    interface = "virtio1"
     replicate = false
     backup = false
     size = 2000

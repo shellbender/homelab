@@ -95,3 +95,5 @@ w
 
 Format with filesystem
 sudo mkfs.ext4 /dev/vdb1
+
+sudo mount /dev/vdb1 /srv

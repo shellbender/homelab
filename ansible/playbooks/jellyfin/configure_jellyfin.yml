@@ -64,4 +64,14 @@
         immediate: true
       loop: "{{ ports }}"
       become: true
-        
+    
+    - name: Mount SMB fileserver volume
+      ansible.posix.mount:
+        src: //192.168.1.179/public
+        path: /media/public_files
+        opts: "guest,_netdev,uid=1000,gid=1000"
+        opts_no_log: true
+        fstype: cifs
+        state: mounted
+      become: true
+            

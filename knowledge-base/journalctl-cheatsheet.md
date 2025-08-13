@@ -1,0 +1,1 @@
+* Many applications and services output to /var/log

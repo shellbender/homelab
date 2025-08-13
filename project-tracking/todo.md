@@ -1,3 +1,20 @@
+* TODO - 0810 - Expand default storage on Hard Disk virtio0 from 10g to 20g as a base for vms.
+    sudo dnf -y install cloud-utils-growpart
+    growpart /dev/vda 3 -N # dry run
+    growpart /dev/vda 3
+
+    /dev/vda
+    /dev/vda3
+    
+    sudo lvm
+    # Confirm the sizing of physical volume
+    pvs
+    # Get the lv path
+    lvdisplay
+    # Extend
+    lvextend -l +100%FREE /dev/rhel/root
+
+
 Need to associate the 2T disk to a mount on fileserver
 
 # OLD
