@@ -1,5 +1,9 @@
 {
     "python.terminal.activateEnvironment": true,
     "ansible.ansible.path": "/home/andrew/repos/homelab/.venv/bin/ansible",
-    "editor.lineNumbers": "relative"
+    "editor.lineNumbers": "relative",
+    "[markdown]": {
+        "editor.wordWrap": "bounded",
+        "editor.wordWrapColumn": 120 
+    }
 }

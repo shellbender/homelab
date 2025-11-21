@@ -7,3 +7,4 @@ vaultpass
 *.tfstate*
 .ansible/
 *.terraform.lock.hcl*
+ansible/collections/ansible_collections/community*

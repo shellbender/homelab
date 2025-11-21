@@ -1,0 +1,34 @@
+---
+- name: Create ZFS Pool and Dataset
+  hosts: proxmox
+  vars_files:
+    - ../vars/secrets.yml
+  vars:
+    pool_name: tank01
+    disk_ids:
+      - /dev/disk/by-id/wwn-0x5000c500b07a27b8
+      - /dev/disk/by-id/wwn-0x5000c500b072ed50
+    dataset_names:
+      - backups
+      - iso
+      - vm-disks
+  tasks:
+    # zstd offers best performance for spinning disks.
+    # ashift of 12 desired
+    - name: Set pool and filesystem properties
+      community.general.zpool:
+        name: "{{ pool_name }}"
+        filesystem_properties:
+          compression: zstd
+        # force: true
+        vdevs:
+          - type: mirror
+            disks: "{{ disk_ids }}"
+      become: true
+
+    - name: Create new file systems
+      community.general.zfs:
+        name: "{{ pool_name }}/{{ item }}"
+        state: present
+      loop: "{{ dataset_names }}"
+      become: true

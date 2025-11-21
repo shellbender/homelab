@@ -15,3 +15,7 @@ Primary Side Bar Visibility
 
 # Vim Line Numbers
 "editor.lineNumbers": "relative"
+
+# Remove overlapping keys
+Ctrl+E- jump to EOL- on terminal opens file palette
+Unbind from "Go to File..."
